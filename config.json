@@ -1,0 +1,6 @@
+{
+    "llm_mode": "offline",
+    "online_model": "gpt-3.5-turbo",
+    "api_key": "sk-xxxxxxx",
+    "local_model": "gemma-1.1-1b-it"   
+}
