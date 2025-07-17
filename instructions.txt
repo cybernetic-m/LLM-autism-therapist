@@ -1,0 +1,6 @@
+To install for the camera:
+pip install opencv-python
+sudo apt install qtwayland5
+
+To add (Ubuntu) every new terminal:
+export QT_QPA_PLATFORM=xcb
