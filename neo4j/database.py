@@ -5,21 +5,29 @@ import datetime
 
 
 class KnowledgeGraph:
-    def __init__(self, URI, USERNAME, PASSWORD):
-        self.URI = URI
-        self.USER = USERNAME
-        self.PASSWORD = PASSWORD
+    def __init__(self):
+        self.URI = NEO4J_URI
+        self.USER = NEO4J_USERNAME
+        self.PASSWORD = NEO4J_PASSWORD
         self.nodes_properties = NODES
         self.activities = ACTIVITIES
+        print(self.USER)
         self.check()
 
         self.driver = GraphDatabase.driver(self.URI, auth=(self.USER, self.PASSWORD))
         self.check_connection()
 
+        self.add_activity_updates() # just in case we added a new activity in the config.py
+
+    def add_activity_updates(self):
+        # adds the nodes in self.activities if they do not already exist
+        for elem in self.activities:
+            self.run_query(f'MERGE (a:Activity {{name: "{elem}"}})')
+
     def check(self):
         # check if the env variables passed to the class are well defined
         if not self.URI or not self.USER or not self.PASSWORD:
-            raise ValueError("Error: missing URI or USER or PASSWORD")
+            raise ValueError("Error: missing NEO4J_URI or USER or NEO4J_PASSWORD")
 
     def check_connection(self):
         #  check connection to the db
@@ -168,7 +176,7 @@ class KnowledgeGraph:
 
 def kg_test():
     # Instantiate the KnowledgeGraph with connection details
-    kg = KnowledgeGraph(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
+    kg = KnowledgeGraph()
     kg.erase_graph()
 
     # Create two nodes with a custom unique property 'id'
@@ -187,11 +195,28 @@ def kg_test():
                        "Gender": "Male",
                        "Nickname": "Pablo Escobar", "Nation": "Italy"})
 
+    # saves a new child
+    kg.add_child_node({"Id": 2,
+                       "Name": "Antonio",
+                       "Surname": "Lissa",
+                       "Birth": datetime.date(2008, 5, 10),
+                       "Gender": "Male",
+                       "Nickname": "Provola", "Nation": "Italy"})
+
+
+    # saves a new activity of a child
     kg.add_activity(childID=0, genre="Fantasy", summary="story about a singing horse", score=1,
                     activityClass="Storytelling" )
     kg.add_activity(childID=0, genre="Pop", summary="singing baby shark", score=0.8,
                     activityClass="Music")
     kg.add_activity(childID=1, genre="Horror", summary="story about a ghost named peter", score=-.1,
+                    activityClass="Storytelling")
+
+    kg.add_activity(childID=2, genre="Romantic", summary="story about a fish", score=-.1,
+                    activityClass="Storytelling")
+    kg.add_activity(childID=2, genre="Cartoon", summary="singing dragon ball", score=.5,
+                    activityClass="Music")
+    kg.add_activity(childID=2, genre="Adventure", summary="story of a dinosaur that goes missing", score=.8,
                     activityClass="Storytelling")
 
 
