@@ -2,6 +2,7 @@ import pyaudio
 import wave
 import numpy as np
 import pyaudio
+import whisper
 
 def record_audio():
     
@@ -51,7 +52,6 @@ def record_audio():
             # In particular it converts from bytes string like b'\x0000\x0001\x0002...' to a numpy array of 16-bit integers [0, 1, 2, ...]
             audio_data_np = np.frombuffer(data, dtype=np.int16) # Convert the audio data from a buffer to a numpy array
 
-            print (audio_data_np)
             # Compute the RMS (Root Mean Square) of the audio data to check if it is silent
             rms_audio = np.sqrt(np.mean(audio_data_np**2))
 
@@ -91,4 +91,20 @@ def record_audio():
         file.writeframes(b''.join(frames)) # Write the audio frames to the
     print(f"Recording saved to {filename}")
 
+def speech2text(audio_file_path, model_size="base"):
+    """ Convert speech to text using Whisper model.
+    """
+    
+    # Load the Whisper model
+    model = whisper.load_model(model_size)  # You can choose a different model size (tiny, base, small, medium, large)
+
+
+    # Transcribe the recorded audio
+    result = model.transcribe(audio_file_path)  # Transcribe the audio file
+
+    # Print the transcribed text
+    return result
+
 record_audio()  # Call the function to record audio
+result = speech2text("audio.wav")  # Call the function to transcribe the recorded audio
+print(result['text'])  # Print the transcribed text
