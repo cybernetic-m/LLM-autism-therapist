@@ -4,3 +4,11 @@ sudo apt install qtwayland5
 
 To add (Ubuntu) every new terminal:
 export QT_QPA_PLATFORM=xcb
+
+
+If the recording do not work:
+pulseaudio -k
+pulseaudio --start
+sudo alsactl init
+sudo modprobe -r snd_hda_intel
+sudo modprobe snd_hda_intel
