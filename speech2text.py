@@ -22,12 +22,12 @@ def record_audio():
     rate = 44100 # Sample rate (samples per second) it means 44.1 kHz
     
     # Thresholds for silence detection
-    threshold_silent_chunks = 200 # Number of silent chunks before stopping the recording
-    threshold_volume = 100 # Volume threshold to consider the audio as silent
+    threshold_silent_chunks = 50 # Number of silent chunks before stopping the recording
+    threshold_volume = 150 # Volume threshold to consider the audio as silent
 
     filename = "audio.wav" # Output file name
 
-    print("Recording... Speak now!")
+    print("Recording... Speak now! If you want to stop the recording, press Ctrl+C.")
 
     # Open the audio stream
     stream = p.open(format=format_type, 
@@ -51,9 +51,12 @@ def record_audio():
             # Convert the audio data to numpy array to analyze silence
             # In particular it converts from bytes string like b'\x0000\x0001\x0002...' to a numpy array of 16-bit integers [0, 1, 2, ...]
             audio_data_np = np.frombuffer(data, dtype=np.int16) # Convert the audio data from a buffer to a numpy array
+            audio_data_np = audio_data_np.astype(np.int32) # Convert the audio data to 32-bit integers beacuse squarring to compute the RMS requires 32-bit integers to avoid overflow and negative values
 
             # Compute the RMS (Root Mean Square) of the audio data to check if it is silent
-            rms_audio = np.sqrt(np.mean(audio_data_np**2))
+            # If the audio data is empty, set the RMS to 0 
+            audio_mean_square = np.mean(audio_data_np**2)  # Compute the mean of the audio data
+            rms_audio = np.sqrt(audio_mean_square)
 
             # Increment the silent chunks counter if the audio is silent
             if rms_audio < threshold_volume:
@@ -92,19 +95,30 @@ def record_audio():
     print(f"Recording saved to {filename}")
 
 def speech2text(audio_file_path, model_size="base"):
+
     """ Convert speech to text using Whisper model.
+    Args:
+        audio_file_path (str): Path to the audio file to transcribe.
+        model_size (str): Size of the Whisper model to use (tiny, base, small, medium, large). We suggest to use 'medium' for a good balance between speed and accuracy.
+    Outputs:
+        result (dict): The transcription result containing the transcribed text.
     """
     
+    print(f"Transcribing audio with Whisper model {model_size}...")
+
     # Load the Whisper model
-    model = whisper.load_model(model_size)  # You can choose a different model size (tiny, base, small, medium, large)
+    model = whisper.load_model(model_size)  
 
 
-    # Transcribe the recorded audio
+    # Transcribe the recorded audio. The model will process the audio file and return the transcription result dict. 
+    # The dict is {'text': ' ciao', 'segments': [{'id': 0, 'seek': 0, 'start': 0.0, 'end': 2.0, 'text': ' ciao', 'tokens': [50364, 42860, 50464], 
+    # 'temperature': 0.0, 'avg_logprob': -0.7956851124763489, 'compression_ratio': 0.3333333333333333, 'no_speech_prob': 0.3112330734729767}], 'language': 'it'}
+    # We are interested in the 'text' key, which contains the transcribed text, discarding the rest of the information.
     result = model.transcribe(audio_file_path)  # Transcribe the audio file
 
-    # Print the transcribed text
-    return result
+    # Return only the transcribed text
+    return result['text']  
 
 record_audio()  # Call the function to record audio
-result = speech2text("audio.wav")  # Call the function to transcribe the recorded audio
-print(result['text'])  # Print the transcribed text
+text = speech2text("audio.wav", model_size='medium')  # Call the function to transcribe the recorded audio
+print(text)  # Print the transcribed text
