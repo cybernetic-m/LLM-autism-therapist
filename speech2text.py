@@ -1,7 +1,6 @@
 import pyaudio
 import wave
 import numpy as np
-import pyaudio
 import whisper
 
 def record_audio():
@@ -94,7 +93,7 @@ def record_audio():
         file.writeframes(b''.join(frames)) # Write the audio frames to the
     print(f"Recording saved to {filename}")
 
-def speech2text(audio_file_path, model_size="base"):
+def speech2text(audio_file_path, model_size="medium", device="cpu"):
 
     """ Convert speech to text using Whisper model.
     Args:
@@ -107,7 +106,7 @@ def speech2text(audio_file_path, model_size="base"):
     print(f"Transcribing audio with Whisper model {model_size}...")
 
     # Load the Whisper model
-    model = whisper.load_model(model_size)  
+    model = whisper.load_model(model_size, device=device)  
 
 
     # Transcribe the recorded audio. The model will process the audio file and return the transcription result dict. 
