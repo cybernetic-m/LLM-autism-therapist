@@ -2,6 +2,9 @@ To install for the camera:
 pip install opencv-python
 sudo apt install qtwayland5
 
+To install for the audio:
+sudo apt install portaudio19-dev build-essential pulseaudio
+
 To add (Ubuntu) every new terminal:
 export QT_QPA_PLATFORM=xcb
 
@@ -12,3 +15,9 @@ pulseaudio --start
 sudo alsactl init
 sudo modprobe -r snd_hda_intel
 sudo modprobe snd_hda_intel
+
+if you encounter an ssl certificate error follows this steps:
+1.sudo apt-get update
+sudo apt-get install --reinstall ca-certificates
+
+2.export SSL_CERT_FILE=$(python -c "import certifi; print(certifi.where())")
