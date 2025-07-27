@@ -1,12 +1,22 @@
 import requests
 import time
 from typing import Optional
-from database import KnowledgeGraph
+from neo4j_db.database import KnowledgeGraph
 import ast
 import datetime
 import random
+from dotenv import load_dotenv
 import os
-groq_api_key = os.environ.get("GROQ_API_KEY")
+from pathlib import Path
+import sys
+
+env_path = Path(__file__).parent / "api.env"
+load_dotenv(dotenv_path=env_path)
+groq_api_key = os.getenv("GROQ_API_KEY")
+
+if not groq_api_key:
+    print("API KEY NOT LOADED")
+    sys.exit(1)
 
 def call_translation_api(api_key, model_name, system_prompt_template, user_prompt_template, temperature) -> Optional[
     str]:
@@ -127,6 +137,7 @@ Robot: That’s amazing!
 if __name__ == '__main__':
     kg = KnowledgeGraph()
     kg.erase_graph()
+
 
     llm_response = call_translation_api(api_key=groq_api_key,
                          model_name="gemma2-9b-it",

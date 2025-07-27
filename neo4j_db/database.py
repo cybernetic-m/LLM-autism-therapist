@@ -1,5 +1,5 @@
 from neo4j import GraphDatabase
-from config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
+from neo4j_db.config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
 import datetime
 
 
@@ -11,7 +11,6 @@ class KnowledgeGraph:
         self.PASSWORD = NEO4J_PASSWORD
         self.nodes_properties = NODES
         self.activities = ACTIVITIES
-        print(self.USER)
         self.check()
 
         self.driver = GraphDatabase.driver(self.URI, auth=(self.USER, self.PASSWORD))
