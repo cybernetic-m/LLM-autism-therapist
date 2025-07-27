@@ -114,7 +114,7 @@ class DatabaseLLM:
 
             # Post-process data if needed
             if fn == "add_child_node":
-                if "Birth" in data:
+                if "Birth" in data and data['Birth']:
                     data["Birth"] = datetime.date.fromisoformat(data["Birth"])
                 data["Id"] = child_id  # Add or assign a unique ID
                 self.kg.add_child_node(data)
@@ -135,34 +135,44 @@ class TherapistLLM:
         self.system_prompt = SYSTEM_PROMPT_THERAPIST
         self.user_prompt = USER_PROMPT_TEMPLATE_THERAPIST
         self.session_history = ''
+        self.data = None
 
+    def load_data(self, data):
+        self.data = data
 
-    def calculate_age(birth_date_str, today=None):
+    def calculate_age(self, birth_date_str, today=None):
         # birth_date_str should be in "YYYY-MM-DD" format
+        if birth_date_str == '':
+            return ''
+
         birth_date = datetime.strptime(birth_date_str, "%Y-%m-%d").date()
         if today is None:
             today = datetime.today().date()
         age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
         return age
 
-    def speak(self, data):
+    def add_child_response(self, response):
+        self.session_history += '\nChild:' + response
+
+    def speak(self):
         formatted_user_prompt = self.user_prompt.format(
-            child_name=data['name'],
-            child_surname=data['surname'],
-            child_age=self.calculate_age(data['birth']),
-            child_gender=data['gender'],
-            child_nation=data['nation'],
-            child_likes=data['child_likes'],
-            child_dislikes = data['dislikes'],
-            previous_activity=data['previous_activity'],
+            child_name=self.data['child_name'],
+            child_surname=self.data['child_surname'],
+            child_age=self.calculate_age(data['child_birth']),
+            child_gender=self.data['child_gender'],
+            child_nation=self.data['child_nation'],
+            child_likes=self.data['child_likes'],
+            child_dislikes = self.data['child_dislikes'],
+            previous_activity=self.data['previous_activity'],
             conversation_history=self.session_history
         )
+        #print("FORMATTED:\n" + formatted_user_prompt)
         llm_response = call_translation_api(api_key=groq_api_key,
                                             model_name="gemma2-9b-it",
                                             system_prompt_template=self.system_prompt,
                                             user_prompt_template=formatted_user_prompt,
-                                            temperature=0.0)
-
+                                            temperature=1)
+        self.session_history += '\nYou: ' + llm_response
         return llm_response
 
 
@@ -176,13 +186,50 @@ known_child = {
     "child_likes": "Fairy tales, drawing, singing Disney songs",
     "child_dislikes": "dinosaurs",
     "previous_activity": "Storytelling about a magical forest with unicorns",
-    "conversation_history": "You: Hi Sofia! Last time we visited a magical forest. Would you like to go back there or try something new? Sofia: I want a new story with a dragon!"
+}
+
+
+unknown_child = {
+    "child_name": "",
+    "child_surname": "",
+    "child_birth": "",
+    "child_gender": "",
+    "child_nation": "",
+    "child_likes": "",
+    "child_dislikes": "",
+    "previous_activity": "",
 }
 
 if __name__ == '__main__':
+    '''
      therapist = TherapistLLM()
      data = known_child
-     print(therapist.speak(data))
+     therapist.load_data(data)
+
+     print("THERAPIST:\n" + therapist.speak())
+
+     therapist.add_child_response("No i want to make a story about murders")
+
+     print("THERAPIST:\n" + therapist.speak())
+     '''
+
+    therapist = TherapistLLM()
+    data = known_child
+    therapist.load_data(data)
+    print("- THERAPIST:\n" + therapist.speak())
+    response = ''
+
+    while True:
+        response = input("- You: ")
+        if response == '0': break
+        therapist.add_child_response(response)
+        print("- THERAPIST:\n" + therapist.speak())
+
+    print("CONVERSATION: \n" + therapist.session_history)
+    db_llm = DatabaseLLM(api_key=groq_api_key)
+    db_llm.save_info(child_id=1, conversation=therapist.session_history, verbose=True)
+
+
 
 
 
