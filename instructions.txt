@@ -21,3 +21,6 @@ if you encounter an ssl certificate error follows this steps:
 sudo apt-get install --reinstall ca-certificates
 
 2.export SSL_CERT_FILE=$(python -c "import certifi; print(certifi.where())")
+
+To install for the window:
+sudo apt-get install python3-tk

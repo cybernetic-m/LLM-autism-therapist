@@ -41,8 +41,6 @@ def eye_landmark_extraction(image):
     # Initialize the lists of left and right eye landmarks
     left_eye_landmarks = [33, 133, 160, 159, 158, 144, 145, 153, 154, 155]
     right_eye_landmarks = [263, 362, 387, 386, 385, 373, 374, 380, 381, 382]
-    left_iris_landmarks = [473]
-    right_iris_landmarks = [468]
 
     # Create a Face Mesh instance with 
     with mp_face_mesh.FaceMesh(max_num_faces=1,     # The maximum number of faces to detect in the image
@@ -76,27 +74,56 @@ def eye_landmark_extraction(image):
             left_eye_y_coords = [coord[1] for coord in left_eye_coords]
 
             # Compute the left pupil coordinates as the average of the eye landmarks
-            #left_pupil_x = sum(left_eye_x_coords) // len(left_eye_x_coords)
-            #left_pupil_y = sum(left_eye_y_coords) // len(left_eye_y_coords)
-            left_pupil = (int(face.landmark[473].x * w), int(face.landmark[473].y * h))
-            right_pupil = (int(face.landmark[468].x * w), int(face.landmark[468].y * h))
+            left_pupil = (int(face.landmark[468].x * w), int(face.landmark[468].y * h))
+            right_pupil = (int(face.landmark[473].x * w), int(face.landmark[473].y * h))
              
-            # Compute the right pupil coordinates as the average of the eye landmark
-            right_pupil_x = sum(right_eye_x_coords) // len(right_eye_x_coords)
-            right_pupil_y = sum(right_eye_y_coords) // len(right_eye_y_coords)
+            # Compute the center of the left and right eyes
+            # The center is computed as the average of the x and y coordinates of the eye landmarks
+            center_right_eye = (sum(right_eye_x_coords) // len(right_eye_x_coords), sum(right_eye_y_coords) // len(right_eye_y_coords))
+            center_left_eye = (sum(left_eye_x_coords) // len(left_eye_x_coords), sum(left_eye_y_coords) // len(left_eye_y_coords))
 
-            return left_eye_coords, right_eye_coords, left_pupil, right_pupil #(left_pupil_x, left_pupil_y), (right_pupil_x, right_pupil_y)
+            return left_eye_coords, right_eye_coords, left_pupil, right_pupil, center_left_eye, center_right_eye
         else:
             print(f"No face detected")
-            return None, None
+            return None, None, None, None, None, None
+        
+
+def gaze_estimator(center_left_eye, left_pupil, center_right_eye, right_pupil):
+    
+    """Estimate the gaze direction based on the eye landmarks and pupil coordinates.
+    Args:
+        center_left_eye (tuple): Coordinates of the center of the left eye.
+        left_pupil (tuple): Coordinates of the left pupil.
+        center_right_eye (tuple): Coordinates of the center of the right eye.
+        right_pupil (tuple): Coordinates of the right pupil.
+    Outputs:
+        gaze_direction (str): The estimated gaze direction.
+    """
+
+    # Calculate the distance between the centers of the left and right eyes
+    dist_right_x = center_right_eye[0] - right_pupil[0]
+    dist_right_y = center_right_eye[1] - right_pupil[1]
+    dist_left_x = center_left_eye[0] - left_pupil[0]
+    dist_left_y = center_left_eye[1] - left_pupil[1]
+
+    # Compute the sum of the absolute distances in x and y directions
+    sum_x = np.abs(dist_right_x + dist_left_x)
+    sum_y = np.abs(dist_right_y + dist_left_y)
+
+    # Having a threshold for the x, and one for the y direction
+    threshold_x = 15  # Threshold for x direction (looking left/right)distracted
+    threshold_y = 6  # Threshold for y direction (looking up/down)
+
+    if sum_x < threshold_x and sum_y < threshold_y:
+        return "Centered"  # Gaze is centered
+    else:
+        return "Not Centered"  # Gaze is not centered
     
 
 
 # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
 counter_frames = 0
 num_frames_emotion = 20
-
-
 
 # Initialize a dictionary to store emotion counts during simulation
 emotion_dict = {
@@ -120,9 +147,11 @@ if not camera.isOpened():
     raise("Error: Could not open camera. Check if the camera is connected, or change the idx of the camera in 'camera = cv2.VideoCapture(0)' line.")
     quit()
 
+
 while True:
 
-    
+    time.sleep(1)  # Sleep for a short time to avoid high CPU usage
+
     # Read a frame from the camera (ret is a boolean indicating success)
     ret, frame = camera.read()
     counter_frames += 1     # increment the frame counter
@@ -143,7 +172,7 @@ while True:
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Pass the frame to the eye_landmark_extraction function that returns the left and right eye landmarks, and the pupil coordinates
-        left_eye_coords, right_eye_coords, (left_pupil_x, left_pupil_y), (right_pupil_x, right_pupil_y) = eye_landmark_extraction(frame)
+        left_eye_coords, right_eye_coords, left_pupil, right_pupil, center_left_eye, center_right_eye = eye_landmark_extraction(frame)
         
         # Display results
         if left_eye_coords and right_eye_coords:
@@ -153,9 +182,21 @@ while True:
             for (x, y) in right_eye_coords:
                 cv2.circle(frame, (x, y), radius=2, color=(255, 0, 0), thickness=-1)
             # Draw a red circle at the pupil
-            cv2.circle(frame, (left_pupil_x, left_pupil_y), radius=8, color=(0, 255, 0), thickness=2)
-            cv2.circle(frame, (right_pupil_x, right_pupil_y), radius=8, color=(0, 255, 0), thickness=2)
+            cv2.circle(frame, (left_pupil[0], left_pupil[1]), radius=8, color=(0, 255, 0), thickness=2)
+            cv2.circle(frame, (right_pupil[0], right_pupil[1]), radius=8, color=(0, 255, 0), thickness=2)
 
+            # Draw the center of the left and right eyes
+            cv2.circle(frame, (center_left_eye[0], center_left_eye[1]), radius=2, color=(0, 0, 255), thickness=-1)  # Draw line from center of left eye to pupil
+            cv2.circle(frame, (center_right_eye[0], center_right_eye[1]), radius=2, color=(0, 0, 255), thickness=-1)  # Draw line from center of left eye to pupil
+            
+            # Draw lines from the center of the left and right eyes to the pupils
+            cv2.line(frame, center_left_eye, left_pupil, (0, 0, 0), 2)  # Draw line from center of left eye to pupil
+            cv2.line(frame, center_right_eye, right_pupil, (0, 0, 0), 2)  # Draw line from center of right eye to pupil
+
+            # Gaze estimation
+            gaze = gaze_estimator(center_left_eye, left_pupil, center_right_eye, right_pupil)
+            print(f"State: {gaze}")
+            
             # Show the output image
             cv2.imshow("Eye Landmarks", frame)
         else:
