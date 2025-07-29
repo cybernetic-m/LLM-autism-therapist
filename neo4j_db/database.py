@@ -76,10 +76,11 @@ class KnowledgeGraph:
             surname = record["child"]["Surname"]
             birth = record["child"]["Birth"]
             child_preferences = self.get_child_preferences(name=name, surname=surname, birth_date=birth)
-            last_activity = self.get_last_activity(name=name, surname=surname, birth_date=birth_date)
-            record['child'].update(child_preferences)
-            record['child'].update(last_activity)
-            record["child"]["Birth"] = str(record["child"]["Birth"])
+            last_activity = self.get_last_activity(name=name, surname=surname, birth_date=birth)
+            if child_preferences:
+                record['child'].update(child_preferences)
+            if last_activity:
+                record['child'].update(last_activity)
             child_info.append(record["child"])
 
         return child_info
@@ -132,6 +133,7 @@ class KnowledgeGraph:
 
     def run_query(self, query, parameters=None):
         # executes any query passed as string with optional params
+        #print("running query", query)
         try:
             with self.driver.session() as my_session:
                 query_result = my_session.run(query, parameters or {})
@@ -143,7 +145,7 @@ class KnowledgeGraph:
     def create_node(self, label, properties, verbose=False):
         # makes a node
         props = ", ".join(f"{k}: ${k}" for k in properties)
-        query = f"CREATE (n:{label} {{ {props} }}) RETURN n"
+        query = f"MERGE (n:{label} {{ {props} }}) RETURN n"
         if verbose:
             print("- Building node")
             print(" - query:", query)
@@ -185,7 +187,7 @@ class KnowledgeGraph:
         query = f"""
         MATCH (start:{start_node_label}), (end:{end_node_label})
         WHERE {build_match('start', start_node_match)} AND {build_match('end', end_node_match)}
-        CREATE (start)-[r:{relationship_name}{rel_props}]->(end)
+        MERGE (start)-[r:{relationship_name}{rel_props}]->(end)
         RETURN type(r)
         """
 
@@ -204,7 +206,11 @@ class KnowledgeGraph:
 
     def add_child_node(self, params):
         # adds a child node with params
-        self.create_node("Child", params)
+        if len(self.get_child(name=params['Name'], surname = params['Surname'], birth_date=params['Birth'])) == 0:
+            print(" - adding node:", params)
+            self.create_node("Child", params)
+        else:
+            print("node child already exist")
         '''if self.has_all_keys_with_values(params, self.nodes_properties['Child']):
             self.create_node("Child", params)
         else:
@@ -219,17 +225,19 @@ class KnowledgeGraph:
 
     def add_relationship_child_activity_detail(self, childID = None, name= None, surname= None, birthdate = None, activityDetailProperties= None, score= None, activityNodeName= None):
         # connects child to a new activity and the new activity to its class
-
         relation = 'LIKES' if score > 0 else 'DISLIKES'
 
-        if childID: start_node_match = {"Id": childID}
+        if childID is not None:
+            start_node_match = {"Id": childID}
         elif name and surname and not birthdate:
             start_node_match = {"Name": name, "Surname": surname}
         elif name and surname and birthdate:
             start_node_match = {"Name": name, "Surname": surname, "Birth": birthdate}
-        else: return
+        else:
+            return
 
-        if not score: score = ''
+        if not score:
+            score = ''
 
         self.create_relationship(
             start_node_label="Child",
@@ -253,6 +261,7 @@ class KnowledgeGraph:
 
     def add_activity(self, childID = None, name = None, surname = None, birthdate = None, genre = None, summary = None, score = None, activityClass = None):
         # adds an activity and builds the relationships with the child and the activity class
+        print(f"    -Adding activity: childID={childID}, name={name}, surname={surname}, birthdate={birthdate}, genre={genre}, summary={summary}, score={score}, activityClass={activityClass}")
         activity_properties = {"Genre": genre, "Summary": summary}
         self.add_activity_detail_node(activity_properties)
         self.add_relationship_child_activity_detail(childID=childID,
@@ -290,7 +299,7 @@ def kg_test():
     kg.add_child_node({"Id": 0,
                        "Name": "Massimo",
                        "Surname": "Romano",
-                       "Birth": datetime.date(2010, 8, 16),
+                       "Birth": "2010-08-16",
                        "Gender": "Female",
                        "Nickname": "Pappone",
                        "Nation": "Italy"})
@@ -298,7 +307,7 @@ def kg_test():
     kg.add_child_node({"Id": 1,
                        "Name": "Paolo",
                        "Surname": "Renzi",
-                       "Birth": datetime.date(2012, 5, 10),
+                       "Birth": "2012-05-10",
                        "Gender": "Male",
                        "Nickname": "Pablo Escobar", "Nation": "Italy"})
 
@@ -306,7 +315,7 @@ def kg_test():
     kg.add_child_node({"Id": 2,
                        "Name": "Antonio",
                        "Surname": "Lissa",
-                       "Birth": datetime.date(2008, 5, 10),
+                       "Birth": "2008-05-10",
                        "Gender": "Male",
                        "Nickname": "Provola", "Nation": "Italy"})
 
@@ -316,6 +325,7 @@ def kg_test():
                     activityClass="Storytelling" )
     kg.add_activity(childID=0, genre="Pop", summary="singing baby shark", score=0.8,
                     activityClass="Music")
+
     kg.add_activity(childID=1, genre="Horror", summary="story about a ghost named peter", score=-.1,
                     activityClass="Storytelling")
 
@@ -336,66 +346,17 @@ def kg_test():
     kg.close()
 
 
-USEFUL_QUERIES = {
-    "get_everything":
-    """
-    MATCH (s)-[r]->(e)
-    RETURN 
-      properties(s) AS start_node,
-      type(r) AS rel_type,
-      properties(r) AS rel_props,
-      properties(e) AS end_node
-    """,
-    "get_node_by_id": """
-        MATCH (n:{label} {{id: $id}})
-        RETURN n
-    """,
-    "get_nodes_with_relationship": """
-        MATCH (start:{start_label})-[relationship:{rel_type}]->(end:{end_label})
-        RETURN start, relationship, end
-    """,
-
-    "delete_node_by_id": """
-        MATCH (n:{label} {{id: $id}})
-        DETACH DELETE n
-    """,
-
-    "update_node_properties": """
-        MATCH (n:{label} {{id: $id}})
-        SET n += $properties
-        RETURN n
-    """
-}
 
 
 if __name__ == "__main__":
-    #kg_test()
+    kg_test()
 
     kg = KnowledgeGraph()
-    kg.add_activity(name= "Paolo", surname= "Renzi",birthdate="2012-05-10", genre= "Fantasy", summary= "story about a singing shark", score = 0, activityClass="Storytelling" )
-
+    #kg.add_activity(name= "marco", surname= "bomba", birthdate="2015-09-20", genre= "Fantasy", summary= "story about a fog", score = 0, activityClass="Storytelling" )
 
     #print(kg.get_child())
-    print(kg.get_child(name = 'Paolo', surname = 'Renzi'))
 
 
-    '''kg = KnowledgeGraph(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
+    print(kg.get_child(name = 'Massimo', surname = 'Romano'))
 
-    query_template = USEFUL_QUERIES["get_node_by_id"].format(label="Child")
-    params = {"id": 0}
-    result = kg.run_query(query_template, params)
-    print(result)
-
-    query_template = USEFUL_QUERIES["get_nodes_with_relationship"].format(start_label = 'Child',
-                                                                            rel_type = 'LIKES',
-                                                                            end_label = 'Activity')
-    result = kg.run_query(query_template)
-    print(result)
-
-    query_template = USEFUL_QUERIES["get_everything"]
-    result = kg.run_query(query_template)
-    for elem in result:
-        print(elem)
-
-    kg.close()'''
 
