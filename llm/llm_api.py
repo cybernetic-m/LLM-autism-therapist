@@ -4,13 +4,12 @@ from typing import Optional
 from neo4j_db.database import KnowledgeGraph
 import ast
 from datetime import datetime
-
+import yaml
 from dotenv import load_dotenv
 import os
 from pathlib import Path
 import sys
 
-from llm.llm_config import SYSTEM_PROMPT_DATABASE_LLM, SYSTEM_PROMPT_THERAPIST, USER_PROMPT_TEMPLATE_THERAPIST
 
 env_path = Path(__file__).parent / "api.env"
 load_dotenv(dotenv_path=env_path)
@@ -19,6 +18,15 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 if not groq_api_key:
     print("API KEY NOT LOADED")
     sys.exit(1)
+
+
+with open("config.yaml", "r", encoding="utf-8") as f:
+    prompts = yaml.safe_load(f)
+
+system_prompt_db = prompts["system_prompts"]["database_llm"]
+system_prompt_therapist = prompts["system_prompts"]["therapist"]
+user_prompt_therapist = prompts["user_prompt_templates"]["therapist"]
+
 
 def call_translation_api(api_key, model_name, system_prompt_template, user_prompt_template, temperature) -> Optional[
     str]:
@@ -81,15 +89,16 @@ def call_translation_api(api_key, model_name, system_prompt_template, user_promp
 
 
 class DatabaseLLM:
-    def __init__(self, api_key):
+    def __init__(self, api_key, model_name = 'deepseek-r1-distill-llama-70b'):
         self.api_key = api_key
-        self.system_prompt = SYSTEM_PROMPT_DATABASE_LLM
+        self.system_prompt = system_prompt_db
         self.kg = KnowledgeGraph()
+        self.model_name = model_name
 
-    def save_info(self, child_id, conversation = '', verbose = False, score = None):
+    def save_info(self, conversation = '', verbose = False, score = 0):
 
         llm_response = call_translation_api(api_key=groq_api_key,
-                                            model_name="gemma2-9b-it",
+                                            model_name=self.model_name,
                                             system_prompt_template=self.system_prompt,
                                             user_prompt_template=conversation,
                                             temperature=0.0)
@@ -104,38 +113,42 @@ class DatabaseLLM:
 
             # print("line: ", line)
 
-            parsed = ast.literal_eval(line)
+            try:
+                parsed = ast.literal_eval(line)
+                fn = parsed["function"]
+                data = parsed["data"]
 
-            fn = parsed["function"]
-            data = parsed["data"]
+                if not isinstance(data, dict):
+                    raise TypeError("Expected 'data' to be a dictionary")
 
-            if not isinstance(data, dict):
-                raise TypeError("Expected 'data' to be a dictionary")
+                # Post-process data if needed
+                if fn == "add_child_node":
+                    if "Birth" in data and data['Birth']:
+                        data["Birth"] = datetime.date.fromisoformat(data["Birth"])
+                    self.kg.add_child_node(data)
 
-            # Post-process data if needed
-            if fn == "add_child_node":
-                if "Birth" in data and data['Birth']:
-                    data["Birth"] = datetime.date.fromisoformat(data["Birth"])
-                data["Id"] = child_id  # Add or assign a unique ID
-                self.kg.add_child_node(data)
+                elif fn == "add_activity" and score:
+                    self.kg.add_activity(
+                        name=data['name'],
+                        surname=data['surname'],
+                        birthdate=data['birthdate'],
+                        genre=data["genre"],
+                        summary=data["summary"],
+                        score=score,
+                        activityClass="Storytelling"
+                    )
 
-            elif fn == "add_activity" and score:
-                self.kg.add_activity(
-                    childID=child_id,  # Match to correct child ID
-                    genre=data["Genre"],
-                    summary=data["Summary"],
-                    score=score,
-                    activityClass="Storytelling"
-                )
-
+            except:
+                print("Error in line:", line)
 
 
 class TherapistLLM:
-    def __init__(self):
-        self.system_prompt = SYSTEM_PROMPT_THERAPIST
-        self.user_prompt = USER_PROMPT_TEMPLATE_THERAPIST
+    def __init__(self, model_name = 'deepseek-r1-distill-llama-70b'):
+        self.system_prompt = system_prompt_therapist
+        self.user_prompt = user_prompt_therapist
         self.session_history = ''
         self.data = None
+        self.model_name = model_name
 
     def load_data(self, data):
         self.data = data
@@ -152,7 +165,7 @@ class TherapistLLM:
         return age
 
     def add_child_response(self, response):
-        self.session_history += '\nChild:' + response
+        self.session_history += '\n -Child:' + response
 
     def speak(self):
         formatted_user_prompt = self.user_prompt.format(
@@ -166,26 +179,26 @@ class TherapistLLM:
             previous_activity=self.data['previous_activity'],
             conversation_history=self.session_history
         )
-        #print("FORMATTED:\n" + formatted_user_prompt)
+        #print("FORMATTED PROMPT:\n ______________________ \n" + formatted_user_prompt + '\n ___________________')
         llm_response = call_translation_api(api_key=groq_api_key,
-                                            model_name="gemma2-9b-it",
+                                            model_name=self.model_name,
                                             system_prompt_template=self.system_prompt,
                                             user_prompt_template=formatted_user_prompt,
                                             temperature=1)
-        self.session_history += '\nYou: ' + llm_response
+        self.session_history += '\n -Therapist: ' + llm_response
         return llm_response
 
 
 
 known_child = {
     "child_name": "Sofia",
-    "child_surname": "Bianchi",
+    "child_surname": "Romero",
     "child_birth": "2016-09-12",
     "child_gender": "Female",
     "child_nation": "Italy",
     "child_likes": "Fairy tales, drawing, singing Disney songs",
     "child_dislikes": "dinosaurs",
-    "previous_activity": "Storytelling about a magical forest with unicorns",
+    "previous_activity": "",
 }
 
 
@@ -201,23 +214,37 @@ unknown_child = {
 }
 
 if __name__ == '__main__':
-    '''
-     therapist = TherapistLLM()
-     data = known_child
-     therapist.load_data(data)
 
-     print("THERAPIST:\n" + therapist.speak())
+    therapist_model = 'llama3-70b-8192'
+    db_model = 'gemma2-9b-it'
 
-     therapist.add_child_response("No i want to make a story about murders")
+    name = input("Hi! What's your name? ")
+    surname = input("And your surname? ")
 
-     print("THERAPIST:\n" + therapist.speak())
-     '''
+    kg = KnowledgeGraph()
+    all_data = kg.get_child(name=name, surname=surname)
 
-    therapist = TherapistLLM()
-    data = known_child
+    data = None
+    if len(all_data) == 0:
+        data = unknown_child
+    elif len(all_data) > 1:
+        birth = input("Can you also tell me your birthdate?")
+    else:
+        child = all_data[0]
+        data = {
+                "child_name": child["Name"],
+                "child_surname": child["Surname"],
+                "child_birth": child["Birth"],
+                "child_gender": child["Gender"],
+                "child_nation": child["Nation"],
+                "child_likes": child["LIKES"],
+                "child_dislikes": child["DISLIKES"],
+                "previous_activity": child["last_activity"],
+            }
+    print(data)
+    therapist = TherapistLLM(model_name=therapist_model)
     therapist.load_data(data)
-    print("- THERAPIST:\n" + therapist.speak())
-    response = ''
+    print(therapist.speak())
 
     while True:
         response = input("- You: ")
@@ -225,9 +252,11 @@ if __name__ == '__main__':
         therapist.add_child_response(response)
         print("- THERAPIST:\n" + therapist.speak())
 
-    print("CONVERSATION: \n" + therapist.session_history)
-    db_llm = DatabaseLLM(api_key=groq_api_key)
-    db_llm.save_info(child_id=1, conversation=therapist.session_history, verbose=True)
+
+    db_llm = DatabaseLLM(api_key=groq_api_key, model_name=db_model)
+    data_db_llm = '[CHILD INFO]:\n' + "name: " + data["child_name"] + "\nsurname: " + data["child_surname"] + "\nbirth: " + data["child_birth"] + "\n" + "[CONVERSATION]:" + therapist.session_history
+    print(data_db_llm)
+    db_llm.save_info(child_id=1, conversation= data_db_llm, verbose=True, score=0)
 
 
 

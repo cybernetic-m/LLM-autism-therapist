@@ -14,7 +14,7 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 # DATABASE DATA
 NODES = {
-    "Child": ["Id", "Name", "Surname", "Birth", "Gender"],
+    "Child": ["Id", "Name", "Surname", "Birth"],
     "Activity": ["Id", "Name"],
     "ActivityDetail": ["Genre", "Summary"]
 }

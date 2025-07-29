@@ -1,7 +1,7 @@
 from neo4j import GraphDatabase
 from neo4j_db.config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
 import datetime
-
+from neo4j.time import Date
 
 
 class KnowledgeGraph:
@@ -22,6 +22,100 @@ class KnowledgeGraph:
         # adds the nodes in self.activities if they do not already exist
         for elem in self.activities:
             self.run_query(f'MERGE (a:Activity {{name: "{elem}"}})')
+
+    def get_last_activity(self, name=None, surname=None, birth_date=None):
+        query = """
+        MATCH (c:Child)-[r]->(ad:ActivityDetail)
+        WHERE ($name IS NULL OR c.Name = $name)
+          AND ($surname IS NULL OR c.Surname = $surname)
+          AND ($birth_date IS NULL OR c.Birth = $birth_date)
+          AND type(r) IN ['LIKES', 'DISLIKES']
+        RETURN
+               ad.Genre AS activity_genre,
+               ad.Summary AS activity_summary
+        ORDER BY r.date DESC
+        LIMIT 1
+        """
+        params = {
+            "name": name,
+            "surname": surname,
+            "birth_date": birth_date
+        }
+
+        results = self.run_query(query, params or {})
+        return {"last_activity": results[0]} if results else None
+
+    def get_child(self, name=None, surname=None, birth_date=None):
+        if not name and not surname and not birth_date:
+            # No filters — return all children
+            query = """
+            MATCH (c:Child)
+            RETURN properties(c) AS child
+            """
+            params = {}
+        else:
+            # Apply filters conditionally
+            query = """
+            MATCH (c:Child)
+            WHERE ($name IS NULL OR c.Name = $name)
+              AND ($surname IS NULL OR c.Surname = $surname)
+              AND ($birth_date IS NULL OR c.Birth = $birth_date)
+            RETURN properties(c) AS child
+            """
+            params = {
+                "name": name,
+                "surname": surname,
+                "birth_date": birth_date
+            }
+
+        results = self.run_query(query, params or {})
+
+        child_info = []
+        for record in results:
+            name = record['child']["Name"]
+            surname = record["child"]["Surname"]
+            birth = record["child"]["Birth"]
+            child_preferences = self.get_child_preferences(name=name, surname=surname, birth_date=birth)
+            last_activity = self.get_last_activity(name=name, surname=surname, birth_date=birth_date)
+            record['child'].update(child_preferences)
+            record['child'].update(last_activity)
+            record["child"]["Birth"] = str(record["child"]["Birth"])
+            child_info.append(record["child"])
+
+        return child_info
+
+    def get_child_preferences(self, name=None, surname=None, birth_date=None):
+        query = """
+        MATCH (c:Child)-[r]->(ad:ActivityDetail)-[:SUBCLASS_OF]->(a:Activity)
+        WHERE ($name IS NULL OR c.Name = $name)
+          AND ($surname IS NULL OR c.Surname = $surname)
+          AND ($birth_date IS NULL OR c.Birth = $birth_date)
+          AND type(r) IN ['LIKES', 'DISLIKES']
+        RETURN type(r) AS relation_type,
+               ad.Genre AS activity_genre,
+               ad.Summary AS activity_summary,
+               a.name AS activity_class
+        """
+        params = {
+            "name": name,
+            "surname": surname,
+            "birth_date": birth_date
+        }
+
+        results = self.run_query(query, params or {})
+
+        preferences = {"LIKES": [], "DISLIKES": []}
+        for record in results:
+            relation = record["relation_type"]
+            entry = {
+                "genre": record.get("activity_genre"),
+                "summary": record.get("activity_summary"),
+                "class": record.get("activity_class")
+            }
+            if relation in preferences:
+                preferences[relation].append(entry)
+
+        return preferences
 
     def check(self):
         # check if the env variables passed to the class are well defined
@@ -110,10 +204,11 @@ class KnowledgeGraph:
 
     def add_child_node(self, params):
         # adds a child node with params
-        if self.has_all_keys_with_values(params, self.nodes_properties['Child']):
+        self.create_node("Child", params)
+        '''if self.has_all_keys_with_values(params, self.nodes_properties['Child']):
             self.create_node("Child", params)
         else:
-            print("Warning: the provided params for child are incomplete")
+            print("Warning: the provided params for child are incomplete")'''
 
     def add_activity_detail_node(self, params):
         # adds an activityDetail node with params
@@ -122,13 +217,23 @@ class KnowledgeGraph:
         else:
             print("Warning: the provided params for avtivity detail are incomplete")
 
-    def add_relationship_child_activity_detail(self, childID, activityDetailProperties, score, activityNodeName):
+    def add_relationship_child_activity_detail(self, childID = None, name= None, surname= None, birthdate = None, activityDetailProperties= None, score= None, activityNodeName= None):
         # connects child to a new activity and the new activity to its class
 
         relation = 'LIKES' if score > 0 else 'DISLIKES'
+
+        if childID: start_node_match = {"Id": childID}
+        elif name and surname and not birthdate:
+            start_node_match = {"Name": name, "Surname": surname}
+        elif name and surname and birthdate:
+            start_node_match = {"Name": name, "Surname": surname, "Birth": birthdate}
+        else: return
+
+        if not score: score = ''
+
         self.create_relationship(
             start_node_label="Child",
-            start_node_match={"Id": childID},
+            start_node_match=start_node_match,
             end_node_label="ActivityDetail",
             end_node_match=activityDetailProperties,
             relationship_name=relation,
@@ -146,11 +251,14 @@ class KnowledgeGraph:
             verbose=False
         )
 
-    def add_activity(self, childID, genre, summary, score, activityClass):
+    def add_activity(self, childID = None, name = None, surname = None, birthdate = None, genre = None, summary = None, score = None, activityClass = None):
         # adds an activity and builds the relationships with the child and the activity class
         activity_properties = {"Genre": genre, "Summary": summary}
         self.add_activity_detail_node(activity_properties)
         self.add_relationship_child_activity_detail(childID=childID,
+                                                    name = name,
+                                                    surname = surname,
+                                                    birthdate = birthdate,
                                                     activityDetailProperties=activity_properties,
                                                     score=score,
                                                     activityNodeName=activityClass)
@@ -261,8 +369,15 @@ USEFUL_QUERIES = {
 
 
 if __name__ == "__main__":
+    #kg_test()
 
-    kg_test()
+    kg = KnowledgeGraph()
+    kg.add_activity(name= "Paolo", surname= "Renzi",birthdate="2012-05-10", genre= "Fantasy", summary= "story about a singing shark", score = 0, activityClass="Storytelling" )
+
+
+    #print(kg.get_child())
+    print(kg.get_child(name = 'Paolo', surname = 'Renzi'))
+
 
     '''kg = KnowledgeGraph(NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD)
 
