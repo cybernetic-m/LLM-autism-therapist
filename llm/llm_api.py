@@ -123,11 +123,11 @@ class DatabaseLLM:
 
                 # Post-process data if needed
                 if fn == "add_child_node":
-                    if "Birth" in data and data['Birth']:
-                        data["Birth"] = datetime.date.fromisoformat(data["Birth"])
+                    print("adding child")
                     self.kg.add_child_node(data)
 
-                elif fn == "add_activity" and score:
+                elif fn == "add_activity":
+                    print("adding activity")
                     self.kg.add_activity(
                         name=data['name'],
                         surname=data['surname'],
@@ -138,8 +138,8 @@ class DatabaseLLM:
                         activityClass="Storytelling"
                     )
 
-            except:
-                print("Error in line:", line)
+            except Exception as e:
+                print("Error in line:", line, "error:", e)
 
 
 class TherapistLLM:
@@ -236,10 +236,10 @@ if __name__ == '__main__':
                 "child_surname": child["Surname"],
                 "child_birth": child["Birth"],
                 "child_gender": child["Gender"],
-                "child_nation": child["Nation"],
+                "child_nation": child.get("Nation"), # may be missing and return None
                 "child_likes": child["LIKES"],
                 "child_dislikes": child["DISLIKES"],
-                "previous_activity": child["last_activity"],
+                "previous_activity": child.get("last_activity"),
             }
     print(data)
     therapist = TherapistLLM(model_name=therapist_model)
@@ -256,7 +256,7 @@ if __name__ == '__main__':
     db_llm = DatabaseLLM(api_key=groq_api_key, model_name=db_model)
     data_db_llm = '[CHILD INFO]:\n' + "name: " + data["child_name"] + "\nsurname: " + data["child_surname"] + "\nbirth: " + data["child_birth"] + "\n" + "[CONVERSATION]:" + therapist.session_history
     print(data_db_llm)
-    db_llm.save_info(child_id=1, conversation= data_db_llm, verbose=True, score=0)
+    db_llm.save_info(conversation= data_db_llm, verbose=True, score=0)
 
 
 
