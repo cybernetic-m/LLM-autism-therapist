@@ -157,8 +157,10 @@ def gaze_estimator(center_left_eye, left_pupil, center_right_eye, right_pupil, t
     threshold_y = 6  # Threshold for y direction (looking up/down)
     threshold_theta_x = 10  # Threshold for head pose rotation around the x-axis (looking up/down)
     threshold_theta_y = 10  # Threshold for head pose rotation around the y-axis (looking left/right)
+    
+    
 
-    if (sum_x < threshold_x and sum_y < threshold_y) and (abs(theta[0]) < threshold_theta_x and abs(theta[1]) < threshold_theta_y):
+    if ((sum_x < threshold_x and sum_y < threshold_y) and (abs(theta[0]) < threshold_theta_x and abs(theta[1]) < threshold_theta_y)) or (sum_x > threshold_x and abs(theta[0]) > threshold_theta_x) or (sum_y > threshold_y and abs(theta[0]) > threshold_theta_y) :
         return "Centered"  # Gaze is centered
     else:
         return "Not Centered"  # Gaze is not centered
