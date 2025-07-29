@@ -53,10 +53,10 @@ def eye_landmark_extraction(face_lm, w, h):
 
     # Compute the pupil coords left and right eye
     # Create lists of x and y coordinates for the left and right eye landmarks
-    right_eye_x_coords = [coord[0] for coord in right_eye_coords]
-    right_eye_y_coords = [coord[1] for coord in right_eye_coords]
-    left_eye_x_coords = [coord[0] for coord in left_eye_coords]
-    left_eye_y_coords = [coord[1] for coord in left_eye_coords]
+    #right_eye_x_coords = [coord[0] for coord in right_eye_coords]
+    #right_eye_y_coords = [coord[1] for coord in right_eye_coords]
+    #left_eye_x_coords = [coord[0] for coord in left_eye_coords]
+    #left_eye_y_coords = [coord[1] for coord in left_eye_coords]
 
     # Compute the left pupil coordinates as the average of the eye landmarks
     left_pupil = (int(face_lm.landmark[468].x * w), int(face_lm.landmark[468].y * h))
@@ -64,10 +64,16 @@ def eye_landmark_extraction(face_lm, w, h):
         
     # Compute the center of the left and right eyes
     # The center is computed as the average of the x and y coordinates of the eye landmarks
-    center_right_eye = (sum(right_eye_x_coords) // len(right_eye_x_coords), sum(right_eye_y_coords) // len(right_eye_y_coords))
-    center_left_eye = (sum(left_eye_x_coords) // len(left_eye_x_coords), sum(left_eye_y_coords) // len(left_eye_y_coords))
+    #center_right_eye = (sum(right_eye_x_coords) // len(right_eye_x_coords), sum(right_eye_y_coords) // len(right_eye_y_coords))
+    #center_left_eye = (sum(left_eye_x_coords) // len(left_eye_x_coords), sum(left_eye_y_coords) // len(left_eye_y_coords))
 
-    return left_eye_coords, right_eye_coords, left_pupil, right_pupil, center_left_eye, center_right_eye
+    outer_boundary_left = (int(face_lm.landmark[33].x * w), int(face_lm.landmark[33].y * h))
+    outer_boundary_right = (int(face_lm.landmark[263].x * w), int(face_lm.landmark[263].y * h))
+
+    lower_boundary_left = (int(face_lm.landmark[145].x * w), int(face_lm.landmark[145].y * h))
+    lower_boundary_right = (int(face_lm.landmark[374].x * w), int(face_lm.landmark[374].y * h))
+
+    return left_eye_coords, right_eye_coords, left_pupil, right_pupil, outer_boundary_left, outer_boundary_right, lower_boundary_left, lower_boundary_right
 
 
 
@@ -129,8 +135,10 @@ def head_pose_estimator(face_lm, w, h):
 
   
 
-def gaze_estimator(center_left_eye, left_pupil, center_right_eye, right_pupil, theta):
-    
+#def gaze_estimator(center_left_eye, left_pupil, center_right_eye, right_pupil, theta):
+
+def gaze_estimator(outer_boundary_left, outer_boundary_right, lower_boundary_left, lower_boundary_right, left_pupil, right_pupil, theta):
+
     """Estimate the gaze direction based on the eye landmarks and pupil coordinates.
     Args:
         center_left_eye (tuple): Coordinates of the center of the left eye.
@@ -143,27 +151,28 @@ def gaze_estimator(center_left_eye, left_pupil, center_right_eye, right_pupil, t
     """
 
     # Calculate the distance between the centers of the left and right eyes
-    dist_right_x = center_right_eye[0] - right_pupil[0]
-    dist_right_y = center_right_eye[1] - right_pupil[1]
-    dist_left_x = center_left_eye[0] - left_pupil[0]
-    dist_left_y = center_left_eye[1] - left_pupil[1]
+    horizontal_dist_right = outer_boundary_right[0] - right_pupil[0]
+    vertical_dist_right = lower_boundary_right[1] - right_pupil[1]
+    horizontal_dist_left = outer_boundary_left[0] - left_pupil[0]
+    vertical_dist_left = lower_boundary_left[1] - left_pupil[1]
 
     # Compute the sum of the absolute distances in x and y directions
-    sum_x = np.abs(dist_right_x + dist_left_x)
-    sum_y = np.abs(dist_right_y + dist_left_y)
+    #sum_x = np.abs(dist_right_x + dist_left_x)
+    #sum_y = np.abs(dist_right_y + dist_left_y)
 
     # Having a threshold for the x, and one for the y direction
-    threshold_x = 15  # Threshold for x direction (looking left/right)distracted
-    threshold_y = 6  # Threshold for y direction (looking up/down)
+    threshold_x = 9 #15  # Threshold for x direction (looking left/right)distracted
+    threshold_y = 3 #6  # Threshold for y direction (looking up/down)
     threshold_theta_x = 10  # Threshold for head pose rotation around the x-axis (looking up/down)
-    threshold_theta_y = 10  # Threshold for head pose rotation around the y-axis (looking left/right)
+    threshold_theta_y = 13  # Threshold for head pose rotation around the y-axis (looking left/right)
     
     
-
-    if ((sum_x < threshold_x and sum_y < threshold_y) and (abs(theta[0]) < threshold_theta_x and abs(theta[1]) < threshold_theta_y)) or (sum_x > threshold_x and abs(theta[0]) > threshold_theta_x) or (sum_y > threshold_y and abs(theta[0]) > threshold_theta_y) :
-        return "Centered"  # Gaze is centered
-    else:
-        return "Not Centered"  # Gaze is not centered
+    #if ((sum_x < threshold_x and sum_y < threshold_y) and (abs(theta[0]) < threshold_theta_x and abs(theta[1]) < threshold_theta_y)) or (sum_x > threshold_x and abs(theta[0]) > threshold_theta_x) or (sum_y > threshold_y and abs(theta[0]) > threshold_theta_y) :
+        #return "Centered"  # Gaze is centered
+    #if (np.abs(max(dist_left_x, dist_right_x) < threshold_x)) and (np.abs(max(dist_left_y, dist_right_y) < threshold_y)): #(abs(theta[0]) < threshold_theta_x and abs(theta[1]) < threshold_theta_y):
+    return f"Centered {max(horizontal_dist_left, horizontal_dist_right)} {max(vertical_dist_left, vertical_dist_right)}"  # Gaze is centered
+    #else:
+        #return "Not Centered"  # Gaze is not centered
 
 
 
@@ -235,13 +244,13 @@ while True:
                 # Get the first detected face landmarks
                 face_lm = results.multi_face_landmarks[0]
                 # Pass the frame to the eye_landmark_extraction function that returns the left and right eye landmarks, and the pupil coordinates
-                left_eye_coords, right_eye_coords, left_pupil, right_pupil, center_left_eye, center_right_eye = eye_landmark_extraction(face_lm, w, h)
+                left_eye_coords, right_eye_coords, left_pupil, right_pupil, outer_boundary_left, outer_boundary_right, lower_boundary_left, lower_boundary_right = eye_landmark_extraction(face_lm, w, h)
                 
                 # Compute the head pose
                 nose_2d, face_2d, theta = head_pose_estimator(face_lm, w, h)
 
                 # Gaze estimation
-                gaze = gaze_estimator(center_left_eye, left_pupil, center_right_eye, right_pupil, theta)
+                gaze = gaze_estimator(outer_boundary_left, outer_boundary_right, lower_boundary_left, lower_boundary_right, left_pupil, right_pupil, theta)
                 print(f"State: {gaze}")
             
                 # Display results
@@ -256,8 +265,8 @@ while True:
                     cv2.circle(frame, (right_pupil[0], right_pupil[1]), radius=8, color=(0, 255, 0), thickness=2)
 
                     # Draw the center of the left and right eyes
-                    cv2.circle(frame, (center_left_eye[0], center_left_eye[1]), radius=2, color=(0, 0, 255), thickness=-1)  # Draw line from center of left eye to pupil
-                    cv2.circle(frame, (center_right_eye[0], center_right_eye[1]), radius=2, color=(0, 0, 255), thickness=-1)  # Draw line from center of left eye to pupil
+                    #cv2.circle(frame, (center_left_eye[0], center_left_eye[1]), radius=2, color=(0, 0, 255), thickness=-1)  # Draw line from center of left eye to pupil
+                    #cv2.circle(frame, (center_right_eye[0], center_right_eye[1]), radius=2, color=(0, 0, 255), thickness=-1)  # Draw line from center of left eye to pupil
 
                     # Draw the nose landmark and all the landmarks used for head pose estimation
                     cv2.circle(frame, (nose_2d[0], nose_2d[1]), radius=2, color=(0, 0, 255), thickness=-1)  # Draw line from center of left eye to pupil
@@ -265,11 +274,14 @@ while True:
                         cv2.circle(frame, (x, y), radius=2, color=(0, 0, 255), thickness=-1)
                     
                     # Draw lines from the center of the left and right eyes to the pupils
-                    cv2.line(frame, center_left_eye, left_pupil, (0, 0, 0), 2)  # Draw line from center of left eye to pupil
-                    cv2.line(frame, center_right_eye, right_pupil, (0, 0, 0), 2)  # Draw line from center of right eye to pupil
+                    cv2.line(frame, outer_boundary_left, left_pupil, (0, 0, 0), 2)  # Draw line from center of left eye to pupil
+                    cv2.line(frame, outer_boundary_right, right_pupil, (0, 0, 0), 2)  # Draw line from center of right eye to pupil
                     
+                    cv2.line(frame, lower_boundary_left, left_pupil, (0, 0, 0), 2)  # Draw line from center of left eye to pupil
+                    cv2.line(frame, lower_boundary_right, right_pupil, (0, 0, 0), 2)  # Draw line from center of right eye to pupil
+
                     p1 = (int(nose_2d[0]), int(nose_2d[1]))
-                    p2 = (int(nose_2d[0] + theta[1] * 5) , int(nose_2d[1] - theta[0] * 5))
+                    p2 = (int(nose_2d[0] + theta[1] * 2) , int(nose_2d[1] - theta[0] * 2))
             
                     cv2.line(frame, p1, p2, (255, 0, 0), 3)
 
