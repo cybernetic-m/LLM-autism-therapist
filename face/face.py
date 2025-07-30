@@ -201,17 +201,17 @@ def gaze_estimator(theta_eye, theta_head):
     """
 
 
-    threshold_x = 3  # Threshold for horizontal gaze direction
+    threshold_x = 5  # Threshold for horizontal gaze direction
     threshold_y = 3  # Threshold for vertical gaze direction
-    epsilon_turn = 0.1  # Threshold for turning the head
+    epsilon_turn = 4  # Threshold for turning the head
     
     # Check if the gaze is centered based on the eye and head angles in particular check if the eyes are centered and the head is not turned too much
-    if (np.abs(theta_eye[0]) > threshold_x or np.abs(theta_eye[1]) > threshold_y) and (np.abs(theta_head[0]) < threshold_x or np.abs(theta_head[1]) < threshold_y):
-        return "Not Centered" 
+    if not(np.abs(theta_eye[0]) > threshold_x or np.abs(theta_eye[1]) > threshold_y) and (np.abs(theta_head[0]) < threshold_x or np.abs(theta_head[1]) < threshold_y):
+        return "Not Centered1 " + str(np.abs(theta_eye[0])) + " " + str(np.abs(theta_eye[1])) + " " + str(np.abs(theta_head[0])) + " " + str(np.abs(theta_head[1]))
     
     # Check if the gaze is centered based on the eye and head angles in particular check if the eyes are turned in the same direction as the head
-    if theta_eye[0] - theta_head[0] > epsilon_turn or theta_eye[1] - theta_head[1] > epsilon_turn:
-        return "Not Centered" 
+    if (theta_eye[0] > epsilon_turn and theta_eye[1] > epsilon_turn and theta_eye[0] > epsilon_turn and theta_eye[1] > epsilon_turn) and ( theta_eye[0] - theta_head[0] > epsilon_turn or theta_eye[1] - theta_head[1] > epsilon_turn):
+        return "Not Centered2 " + str(theta_eye[0] - theta_head[0]) + " " + str(theta_eye[1] - theta_head[1])
     
     return "Centered"
     
@@ -331,7 +331,7 @@ while True:
                     cv2.line(frame, left_pupil, p3, (255, 0, 0), 3)
 
                     # Add the text on the image
-                    cv2.putText(frame, gaze, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
+                    cv2.putText(frame, gaze, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 2553, 0), 2)
 
                     # Show the output image
                     cv2.imshow("Gaze Estimation", frame)
