@@ -3,9 +3,11 @@ opencv-python
 neo4j
 openai-whisper
 pyaudio
+mediapipe
+numpy 
+tf-keras
+
 portaudio19-dev 
 python3-dev 
 build-essential
 pulseaudio
-numpy 
-tf-keras

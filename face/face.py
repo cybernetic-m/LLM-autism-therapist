@@ -76,6 +76,59 @@ def eye_landmark_extraction(face_lm, w, h):
     return left_eye_coords, right_eye_coords, left_pupil, right_pupil, outer_boundary_left, outer_boundary_right, lower_boundary_left, lower_boundary_right
 
 
+def head_eye_pose_estimator(face_lm, w, h):
+
+    """Estimate the head pose in the given image.
+    Args:
+        face_lm (list[obj]): the face landmarks obtained from the mediapipe Face Mesh model.
+    Outputs:
+        
+    """
+    # Define a list of landmarks used to solve the PnP problem
+    # 1: Nose tip
+    # 33: Left eye outer corner
+    # 263: Right eye outer corner
+    # 61: Left mouth corner
+    # 291: Right mouth corner
+    # 199: Chin
+    landmarks_idx = [468, 469, 470, 471, 472, 473, 474, 475, 476, 477]
+
+
+    # Create a list of 2D and 3D points for the other landmarks scaling the normalized coordinates to the image dimensions
+    face_2d = [(int(face_lm.landmark[idx].x*w), int(face_lm.landmark[idx].y*h)) for idx in landmarks_idx]
+    face_3d = [(int(face_lm.landmark[idx].x*w), int(face_lm.landmark[idx].y*h), face_lm.landmark[idx].z) for idx in landmarks_idx]
+
+    # Convert the 2D and 3D points to numpy arrays
+    face_2d_np = np.array(face_2d, dtype=np.float32)
+    face_3d_np = np.array(face_3d, dtype=np.float32)
+
+    # Define the camera matrix (assuming a simple pinhole camera model), focal length and distortion coefficients
+    cx, cy = w / 2, h / 2  # Principal point (center of the image)
+    f = 1.0*w  # Focal length (assume the focal length is equal to the width of the image as usual)
+    camera_matrix = np.array([[f, 0, cx],
+                              [0, f, cy],
+                              [0, 0, 1]])
+    dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
+
+    # We apply the solvePnP function to estimate the rotation vector
+    # success is a boolean indicating if the function was successful
+    # rot_vec is the rotation vector that describes the rotation of the head: ex. (theta_x, theta_y, theta_z) are the angles of rotation around the x, y, and z axes
+    success, rot_vec, _ = cv2.solvePnP(face_3d_np, face_2d_np, camera_matrix, dist_coeffs)
+
+    if success:
+        # Then we trasform the rotation vector to a rotation matrix
+        R, _ = cv2.Rodrigues(rot_vec)
+
+        # We extract the Euler angles from the rotation matrix
+        # The angles are in radians, we can convert them to degrees if needed
+        angles, _, _, _, _, _ = cv2.RQDecomp3x3(R)
+        theta_x, theta_y, theta_z = angles[0]*360, angles[1]*360, angles[2]*360
+
+        # Rotation around the x_axis means looking up/down, rotation around the y_axis means looking left/right
+        return theta_x, theta_y, theta_z
+    else:
+        print("Head pose estimation failed.")
+        return None
 
 def head_pose_estimator(face_lm, w, h):
 
@@ -137,44 +190,31 @@ def head_pose_estimator(face_lm, w, h):
 
 #def gaze_estimator(center_left_eye, left_pupil, center_right_eye, right_pupil, theta):
 
-def gaze_estimator(outer_boundary_left, outer_boundary_right, lower_boundary_left, lower_boundary_right, left_pupil, right_pupil, theta):
+def gaze_estimator(theta_eye, theta_head):
 
     """Estimate the gaze direction based on the eye landmarks and pupil coordinates.
     Args:
-        center_left_eye (tuple): Coordinates of the center of the left eye.
-        left_pupil (tuple): Coordinates of the left pupil.
-        center_right_eye (tuple): Coordinates of the center of the right eye.
-        right_pupil (tuple): Coordinates of the right pupil.
-        theta (tuple): Euler angles of the head pose (theta_x, theta_y, theta_z).
+        theta_eye (tuple): Euler angles of the head pose (theta_x, theta_y, theta_z).
+        theta_head (tuple): Euler angles of the head pose (theta_x, theta_y, theta_z).
     Outputs:
         gaze_direction (str): The estimated gaze direction.
     """
 
-    # Calculate the distance between the centers of the left and right eyes
-    horizontal_dist_right = outer_boundary_right[0] - right_pupil[0]
-    vertical_dist_right = lower_boundary_right[1] - right_pupil[1]
-    horizontal_dist_left = outer_boundary_left[0] - left_pupil[0]
-    vertical_dist_left = lower_boundary_left[1] - left_pupil[1]
 
-    # Compute the sum of the absolute distances in x and y directions
-    #sum_x = np.abs(dist_right_x + dist_left_x)
-    #sum_y = np.abs(dist_right_y + dist_left_y)
-
-    # Having a threshold for the x, and one for the y direction
-    threshold_x = 9 #15  # Threshold for x direction (looking left/right)distracted
-    threshold_y = 3 #6  # Threshold for y direction (looking up/down)
-    threshold_theta_x = 10  # Threshold for head pose rotation around the x-axis (looking up/down)
-    threshold_theta_y = 13  # Threshold for head pose rotation around the y-axis (looking left/right)
+    threshold_x = 3  # Threshold for horizontal gaze direction
+    threshold_y = 3  # Threshold for vertical gaze direction
+    epsilon_turn = 0.1  # Threshold for turning the head
     
+    # Check if the gaze is centered based on the eye and head angles in particular check if the eyes are centered and the head is not turned too much
+    if (np.abs(theta_eye[0]) > threshold_x or np.abs(theta_eye[1]) > threshold_y) and (np.abs(theta_head[0]) < threshold_x or np.abs(theta_head[1]) < threshold_y):
+        return "Not Centered" 
     
-    #if ((sum_x < threshold_x and sum_y < threshold_y) and (abs(theta[0]) < threshold_theta_x and abs(theta[1]) < threshold_theta_y)) or (sum_x > threshold_x and abs(theta[0]) > threshold_theta_x) or (sum_y > threshold_y and abs(theta[0]) > threshold_theta_y) :
-        #return "Centered"  # Gaze is centered
-    #if (np.abs(max(dist_left_x, dist_right_x) < threshold_x)) and (np.abs(max(dist_left_y, dist_right_y) < threshold_y)): #(abs(theta[0]) < threshold_theta_x and abs(theta[1]) < threshold_theta_y):
-    return f"Centered {max(horizontal_dist_left, horizontal_dist_right)} {max(vertical_dist_left, vertical_dist_right)}"  # Gaze is centered
-    #else:
-        #return "Not Centered"  # Gaze is not centered
-
-
+    # Check if the gaze is centered based on the eye and head angles in particular check if the eyes are turned in the same direction as the head
+    if theta_eye[0] - theta_head[0] > epsilon_turn or theta_eye[1] - theta_head[1] > epsilon_turn:
+        return "Not Centered" 
+    
+    return "Centered"
+    
 
 # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
 counter_frames = 0
@@ -247,10 +287,12 @@ while True:
                 left_eye_coords, right_eye_coords, left_pupil, right_pupil, outer_boundary_left, outer_boundary_right, lower_boundary_left, lower_boundary_right = eye_landmark_extraction(face_lm, w, h)
                 
                 # Compute the head pose
-                nose_2d, face_2d, theta = head_pose_estimator(face_lm, w, h)
+                nose_2d, face_2d, theta_head = head_pose_estimator(face_lm, w, h)
+                
+                theta_eye = head_eye_pose_estimator(face_lm, w, h)
 
                 # Gaze estimation
-                gaze = gaze_estimator(outer_boundary_left, outer_boundary_right, lower_boundary_left, lower_boundary_right, left_pupil, right_pupil, theta)
+                gaze = gaze_estimator(theta_eye, theta_head)
                 print(f"State: {gaze}")
             
                 # Display results
@@ -281,9 +323,12 @@ while True:
                     cv2.line(frame, lower_boundary_right, right_pupil, (0, 0, 0), 2)  # Draw line from center of right eye to pupil
 
                     p1 = (int(nose_2d[0]), int(nose_2d[1]))
-                    p2 = (int(nose_2d[0] + theta[1] * 2) , int(nose_2d[1] - theta[0] * 2))
+                    p2 = (int(nose_2d[0] + theta_head[1] * 2) , int(nose_2d[1] - theta_head[0] * 2))
+                    p3 = (int(left_pupil[0] - theta_eye[1] * 2) , int(left_pupil[1] + theta_eye[0] * 2))
             
                     cv2.line(frame, p1, p2, (255, 0, 0), 3)
+                    
+                    cv2.line(frame, left_pupil, p3, (255, 0, 0), 3)
 
                     # Add the text on the image
                     cv2.putText(frame, gaze, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
