@@ -65,11 +65,11 @@ def record_audio():
 
             # If the number of silent chunks exceeds the threshold, stop recording
             if silent_chunks >= threshold_silent_chunks:
-                print("Silence detected, stopping recording.")
+                #print("Silence detected, stopping recording.")
                 break
 
     except KeyboardInterrupt:
-        print("Recording stopped by user.")
+        print("")
 
     # Stop and close the stream
     stream.stop_stream()
@@ -91,7 +91,7 @@ def record_audio():
         # data = [b'\x0000\x0001\x0002...\x0003\x0004\x0005...']
         # The b'' means that the delimiter is an empty string, so the bytes strings are concatenated without any separator.
         file.writeframes(b''.join(frames)) # Write the audio frames to the
-    print(f"Recording saved to {filename}")
+    #print(f"Recording saved to {filename}")
 
 def speech2text(audio_file_path, model_size="medium", device="cpu"):
 
@@ -103,7 +103,7 @@ def speech2text(audio_file_path, model_size="medium", device="cpu"):
         result (dict): The transcription result containing the transcribed text.
     """
     
-    print(f"Transcribing audio with Whisper model {model_size}...")
+    #print(f"Transcribing audio with Whisper model {model_size}...")
 
     # Load the Whisper model
     model = whisper.load_model(model_size, device=device)  

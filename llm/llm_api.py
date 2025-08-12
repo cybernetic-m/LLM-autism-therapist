@@ -1,7 +1,12 @@
 import sys
+import os
 sys.path.insert(0, './audio') 
 sys.path.insert(0, './neo4j_db') 
 sys.path.insert(0, './llm')
+
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
+
 
 import requests
 import time
