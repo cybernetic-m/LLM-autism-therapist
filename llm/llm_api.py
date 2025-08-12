@@ -1,26 +1,33 @@
+import sys
+sys.path.insert(0, './audio') 
+sys.path.insert(0, './neo4j_db') 
+sys.path.insert(0, './llm')
+
 import requests
 import time
 from typing import Optional
-from neo4j_db.database import KnowledgeGraph
+from database import KnowledgeGraph
 import ast
 from datetime import datetime
 import yaml
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import os
 from pathlib import Path
-import sys
 
+from audio import record_audio, speech2text
 
-env_path = Path(__file__).parent / "api.env"
-load_dotenv(dotenv_path=env_path)
-groq_api_key = os.getenv("GROQ_API_KEY")
+#env_path = Path(__file__).parent / "api.env"
+#load_dotenv(dotenv_path=env_path)
+#groq_api_key = os.getenv("GROQ_API_KEY")
+
+with open("llm/api_key.txt", "r") as file:
+    groq_api_key = file.read()
 
 if not groq_api_key:
-    print("API KEY NOT LOADED")
+    print("API KEY NOT LOADED: please follow the instructions in the README.md file to set up the API key.")
     sys.exit(1)
 
-
-with open("config.yaml", "r", encoding="utf-8") as f:
+with open("llm/config.yaml", "r", encoding="utf-8") as f:
     prompts = yaml.safe_load(f)
 
 system_prompt_db = prompts["system_prompts"]["database_llm"]
@@ -247,7 +254,8 @@ if __name__ == '__main__':
     print(therapist.speak())
 
     while True:
-        response = input("- You: ")
+        record_audio()  # Call the function to record audio
+        response = speech2text("audio.wav", model_size='medium')  # Call the function to transcribe the recorded audio
         if response == '0': break
         therapist.add_child_response(response)
         print("- THERAPIST:\n" + therapist.speak())

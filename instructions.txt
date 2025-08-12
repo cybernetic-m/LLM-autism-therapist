@@ -24,3 +24,8 @@ sudo apt-get install --reinstall ca-certificates
 
 To install for the window:
 sudo apt-get install python3-tk
+
+
+To install for LLM:
+pip install pyyaml
+pip install neo4j

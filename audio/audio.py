@@ -118,6 +118,6 @@ def speech2text(audio_file_path, model_size="medium", device="cpu"):
     # Return only the transcribed text
     return result['text']  
 
-record_audio()  # Call the function to record audio
-text = speech2text("audio.wav", model_size='medium')  # Call the function to transcribe the recorded audio
-print(text)  # Print the transcribed text
+#record_audio()  # Call the function to record audio
+#text = speech2text("audio.wav", model_size='medium')  # Call the function to transcribe the recorded audio
+#print(text)  # Print the transcribed text

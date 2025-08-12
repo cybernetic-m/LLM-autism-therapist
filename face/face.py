@@ -6,7 +6,7 @@ import cv2
 import time
 
 
-sys.path.insert(0, './camera') # Add the path to the camera module 
+#sys.path.insert(0, './camera') # Add the path to the camera module 
 
 
 def analyze_emotion(image_path):
