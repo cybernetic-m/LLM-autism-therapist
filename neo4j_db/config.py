@@ -1,16 +1,17 @@
-from dotenv import load_dotenv
 import os
-from pathlib import Path
-
-env_path = Path(__file__).parent / "config.env"
-load_dotenv(dotenv_path=env_path)
+import yaml
 
 # NEO4J VARIABLES
-NEO4J_URI = os.getenv("NEO4J_URI")
-NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+if os.name == 'nt':  # 'nt' stands for Windows
+    with open("config.yaml", "r", encoding="utf-8") as f:
+            neo4j_data = yaml.safe_load(f)
+if os.name == 'posix':  # 'posix' stands for Linux or macOS
+    with open("neo4j_db/config.yaml", "r", encoding="utf-8") as f:
+            neo4j_data = yaml.safe_load(f)
 
-
+NEO4J_URI = neo4j_data["NEO4J_URI"]
+NEO4J_USERNAME = neo4j_data["NEO4J_USERNAME"]
+NEO4J_PASSWORD = neo4j_data["NEO4J_PASSWORD"]
 
 # DATABASE DATA
 NODES = {

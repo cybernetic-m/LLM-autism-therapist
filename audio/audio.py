@@ -1,7 +1,7 @@
 import pyaudio
 import wave
 import numpy as np
-import whisper
+#import whisper
 
 def record_audio():
     
@@ -21,12 +21,10 @@ def record_audio():
     rate = 44100 # Sample rate (samples per second) it means 44.1 kHz
     
     # Thresholds for silence detection
-    threshold_silent_chunks = 50 # Number of silent chunks before stopping the recording
-    threshold_volume = 150 # Volume threshold to consider the audio as silent
+    threshold_silent_chunks = 100 # Number of silent chunks before stopping the recording
+    threshold_volume = 100 # Volume threshold to consider the audio as silent
 
     filename = "audio.wav" # Output file name
-
-    print("Recording... Speak now! If you want to stop the recording, press Ctrl+C.")
 
     # Open the audio stream
     stream = p.open(format=format_type, 
@@ -65,11 +63,11 @@ def record_audio():
 
             # If the number of silent chunks exceeds the threshold, stop recording
             if silent_chunks >= threshold_silent_chunks:
-                #print("Silence detected, stopping recording.")
+                print("\n---Silence detected, stopping recording---\n---Whisper is transcribing---")
                 break
 
     except KeyboardInterrupt:
-        print("")
+        print("\n---Stopped Recording---\n---Whisper is transcribing---")
 
     # Stop and close the stream
     stream.stop_stream()
@@ -93,7 +91,7 @@ def record_audio():
         file.writeframes(b''.join(frames)) # Write the audio frames to the
     #print(f"Recording saved to {filename}")
 
-def speech2text(audio_file_path, model_size="medium", device="cpu"):
+def speech2text(audio_file_path, model, device="cpu"):
 
     """ Convert speech to text using Whisper model.
     Args:
@@ -106,8 +104,7 @@ def speech2text(audio_file_path, model_size="medium", device="cpu"):
     #print(f"Transcribing audio with Whisper model {model_size}...")
 
     # Load the Whisper model
-    model = whisper.load_model(model_size, device=device)  
-
+    #model = whisper.load_model(model_size, device=device)  
 
     # Transcribe the recorded audio. The model will process the audio file and return the transcription result dict. 
     # The dict is {'text': ' ciao', 'segments': [{'id': 0, 'seek': 0, 'start': 0.0, 'end': 2.0, 'text': ' ciao', 'tokens': [50364, 42860, 50464], 
