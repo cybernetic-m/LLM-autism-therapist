@@ -20,20 +20,29 @@ from pathlib import Path
 if os.name == 'nt':  # 'nt' stands for Windows
     from neo4j_db.database import KnowledgeGraph
     from audio.audio import record_audio, speech2text
+
+    with open("api_key.txt", "r") as file:
+        groq_api_key = file.read()
+
+    with open("config.yaml", "r", encoding="utf-8") as f:
+        prompts = yaml.safe_load(f)
 elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from database import KnowledgeGraph
     from audio import record_audio, speech2text
 
+    with open("llm/api_key.txt", "r") as file:
+        groq_api_key = file.read()
 
-with open("llm/api_key.txt", "r") as file:
-    groq_api_key = file.read()
+    with open("llm/config.yaml", "r", encoding="utf-8") as f:
+        prompts = yaml.safe_load(f)
+
+
+
 
 if not groq_api_key:
     print("API KEY NOT LOADED: please follow the instructions in the README.md file to set up the API key.")
     sys.exit(1)
 
-with open("llm/config.yaml", "r", encoding="utf-8") as f:
-    prompts = yaml.safe_load(f)
 
 system_prompt_db = prompts["system_prompts"]["database_llm"]
 system_prompt_therapist = prompts["system_prompts"]["therapist"]
