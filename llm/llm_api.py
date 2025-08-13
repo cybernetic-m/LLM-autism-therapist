@@ -1,5 +1,4 @@
 import sys
-import os
 sys.path.insert(0, './audio') 
 sys.path.insert(0, './neo4j_db') 
 sys.path.insert(0, './llm')
@@ -7,24 +6,24 @@ sys.path.insert(0, './llm')
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
 
-import keyboard
-
+import os
 import requests
 import time
 from typing import Optional
-from database import KnowledgeGraph
 import ast
 from datetime import datetime
 import yaml
-#from dotenv import load_dotenv
 import os
 from pathlib import Path
 
-from audio import record_audio, speech2text
+# Check the operating system, it is used for the import modules
+if os.name == 'nt':  # 'nt' stands for Windows
+    from neo4j_db.database import KnowledgeGraph
+    from audio.audio import record_audio, speech2text
+elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
+    from database import KnowledgeGraph
+    from audio import record_audio, speech2text
 
-#env_path = Path(__file__).parent / "api.env"
-#load_dotenv(dotenv_path=env_path)
-#groq_api_key = os.getenv("GROQ_API_KEY")
 
 with open("llm/api_key.txt", "r") as file:
     groq_api_key = file.read()
@@ -264,9 +263,10 @@ if __name__ == '__main__':
         response = speech2text("audio.wav", model_size='medium')  # Call the function to transcribe the recorded audio
         therapist.add_child_response(response)
         print("- THERAPIST:\n" + therapist.speak())
+        stop = input("Press 'q' to stop the conversation or any other key to continue: ")
 
-        if keyboard.is_pressed('c'):
-            print("Interrotto con 'c'")
+        if stop.lower() == 'q':
+            print("Conversation ended.")
             break
 
 

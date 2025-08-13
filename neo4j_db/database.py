@@ -2,10 +2,16 @@ import sys
 sys.path.insert(0, './audio') 
 sys.path.insert(0, './neo4j_db')
 
+import os
 from neo4j import GraphDatabase
-from neo4j_db.config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
 import datetime
 from neo4j.time import Date
+
+# Check the operating system, it is used for the import modules
+if os.name == 'nt':  # 'nt' stands for Windows
+    from neo4j_db.config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
+elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
+    from config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
 
 
 class KnowledgeGraph:
