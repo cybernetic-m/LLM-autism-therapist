@@ -7,6 +7,7 @@ sys.path.insert(0, './llm')
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
 
+import keyboard
 
 import requests
 import time
@@ -261,9 +262,12 @@ if __name__ == '__main__':
     while True:
         record_audio()  # Call the function to record audio
         response = speech2text("audio.wav", model_size='medium')  # Call the function to transcribe the recorded audio
-        if response == '0': break
         therapist.add_child_response(response)
         print("- THERAPIST:\n" + therapist.speak())
+
+        if keyboard.is_pressed('c'):
+            print("Interrotto con 'c'")
+            break
 
 
     db_llm = DatabaseLLM(api_key=groq_api_key, model_name=db_model)

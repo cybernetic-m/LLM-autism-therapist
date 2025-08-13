@@ -3,7 +3,7 @@ sys.path.insert(0, './audio')
 sys.path.insert(0, './neo4j_db')
 
 from neo4j import GraphDatabase
-from config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
+from neo4j_db.config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
 import datetime
 from neo4j.time import Date
 
