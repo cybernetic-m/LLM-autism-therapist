@@ -30,7 +30,7 @@ if not groq_api_key:
 system_prompt_db = prompts["system_prompts"]["database_llm"]
 
 class DatabaseLLM:
-    def __init__(self, api_key, model_name = 'deepseek-r1-distill-llama-70b'):
+    def __init__(self, api_key, model_name):
         self.api_key = api_key
         self.system_prompt = system_prompt_db
         self.kg = KnowledgeGraph()

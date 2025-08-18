@@ -20,8 +20,6 @@ if os.name == 'nt':  # 'nt' stands for Windows
     from llm.DatabaseLLM import DatabaseLLM
     with open("api_key.txt", "r") as file:
         groq_api_key = file.read()
-    with open("config.yaml", "r", encoding="utf-8") as f:
-        prompts = yaml.safe_load(f)
 
 elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from database import KnowledgeGraph
@@ -30,8 +28,6 @@ elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from DatabaseLLM import DatabaseLLM
     with open("llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
-    with open("llm/config.yaml", "r", encoding="utf-8") as f:
-        prompts = yaml.safe_load(f)
 
 
 if not groq_api_key:

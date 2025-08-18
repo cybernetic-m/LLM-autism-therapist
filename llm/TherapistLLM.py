@@ -29,7 +29,7 @@ system_prompt_therapist = prompts["system_prompts"]["therapist"]
 user_prompt_therapist = prompts["user_prompt_templates"]["therapist"]
 
 class TherapistLLM:
-    def __init__(self, model_name = 'deepseek-r1-distill-llama-70b'):
+    def __init__(self, model_name):
         self.system_prompt = system_prompt_therapist
         self.user_prompt = user_prompt_therapist
         self.session_history = ''
