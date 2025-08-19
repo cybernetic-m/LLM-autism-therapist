@@ -91,6 +91,7 @@ def record_audio():
         file.writeframes(b''.join(frames)) # Write the audio frames to the
     #print(f"Recording saved to {filename}")
 
+'''
 def speech2text(audio_file_path, model, device="cpu"):
 
     """ Convert speech to text using Whisper model.
@@ -114,3 +115,4 @@ def speech2text(audio_file_path, model, device="cpu"):
 
     # Return only the transcribed text
     return result['text']  
+'''
