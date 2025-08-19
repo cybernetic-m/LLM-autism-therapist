@@ -249,6 +249,8 @@ if __name__ == '__main__':
         data = unknown_child
         data["child_name"] = name
         data["child_surname"] = surname
+        sex = input("Are you a male or female? ")
+        data["child_gender"] = sex
     elif len(all_data) > 1:
         birth = input("Can you also tell me your birthdate?")
     else:
