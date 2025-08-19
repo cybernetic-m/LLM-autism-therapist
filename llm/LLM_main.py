@@ -21,7 +21,7 @@ if os.name == 'nt':  # 'nt' stands for Windows
 
 elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from database import KnowledgeGraph
-    from audio import record_audio, speech2text
+    from audio import record_audio
     from audio_api import audio_groq_api
     from TherapistLLM import TherapistLLM
     from DatabaseLLM import DatabaseLLM

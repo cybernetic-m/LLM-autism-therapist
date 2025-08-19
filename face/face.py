@@ -196,15 +196,14 @@ def gaze_estimator(theta_eye, theta_head):
         gaze_direction (str): The estimated gaze direction.
     """
 
-    threshold_head_x = 5  # Threshold for horizontal gaze direction of head
-    threshold_head_y = 3  # Threshold for vertical gaze direction of head
-    threshold_eye_x = 5  # Threshold for horizontal gaze direction of head
-    threshold_eye_y = 3  # Threshold for vertical gaze direction of head
-    epsilon_turn = 4  # Threshold for turning the head
+    threshold_head_x = 12  # Threshold for horizontal gaze direction of head
+    threshold_head_y = 15  # Thresold for vertical gaze direction of head
+    #threshold_eye_x = 5  # Threshold for horizontal gaze direction of head
+    #threshold_eye_y = 3  # Threshold for vertical gaze direction of head
     
     # Check if the gaze is centered based on the eye and head angles in particular check if the eyes are centered and the head is not turned too much
-    if (np.abs(theta_eye[0]) > threshold_eye_x or np.abs(theta_eye[1]) > threshold_eye_y):
-        return str(np.abs(theta_eye[0])) + "\n" + str(np.abs(theta_eye[1]))
+    if (np.abs(theta_head[0]) > threshold_head_x or np.abs(theta_head[1]) > threshold_head_y):
+        return 'not centered' #str(round(np.abs(theta_head[0]), ndigits=1)) + " " + str(round(np.abs(theta_head[1]), ndigits=1))
     # Check if the gaze is centered based on the eye and head angles in particular check if the eyes are turned in the same direction as the head
     #if (theta_eye[0] > epsilon_turn and theta_eye[1] > epsilon_turn and theta_eye[0] > epsilon_turn and theta_eye[1] > epsilon_turn) and ( theta_eye[0] - theta_head[0] > epsilon_turn or theta_eye[1] - theta_head[1] > epsilon_turn):
     #    return "Not Centered2 " + str(theta_eye[0] - theta_head[0]) + " " + str(theta_eye[1] - theta_head[1])
@@ -220,14 +219,20 @@ def score(gaze, emotion):
         score (int): The computed score.
     """
     
+    detected_emotion = ''
     wg = 0.5  # Weight for gaze direction
     we = 0.5  # Weight for emotion
     
-    if emotion == "happy" or emotion == "surprise":
+    if emotion == "happy": #or emotion == "surprise":
         es = 1
-    elif emotion == "sad" or emotion == "angry" or emotion == "disgust" or emotion == "fear":
-        es = -1
-    elif emotion == "neutral":
+        detected_emotion = emotion
+    elif emotion == "sad": #or emotion == "angry" or emotion == "disgust" or emotion == "fear":
         es = 0
+        detected_emotion = emotion
+    elif emotion == "neutral":
+        es = 0.5
+        detected_emotion = emotion
+    else:
+        es = 0.5
         
-    return gaze * wg + es * we
+    return gaze * wg + es * we, detected_emotion

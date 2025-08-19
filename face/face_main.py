@@ -1,21 +1,10 @@
 import cv2
 import mediapipe as mp
-from face.face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score
+from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score
 
 # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
 counter_frames = 0
-num_frames_emotion = 100
-
-# Initialize a dictionary to store emotion counts during simulation
-emotion_dict = {
-    'angry': 0,
-    'disgust': 0,
-    'fear': 0,
-    'happy': 0,
-    'sad': 0,
-    'surprise': 0,
-    'neutral': 0
-}
+num_frames_emotion = 20
 
 # Open the default camera (usually the first camera)
 camera = cv2.VideoCapture(0)
@@ -28,8 +17,10 @@ if not camera.isOpened():
     raise("Error: Could not open camera. Check if the camera is connected, or change the idx of the camera in 'camera = cv2.VideoCapture(0)' line.")
     quit()
 
-# Initialization of gaze score
+# Initialization of gaze score 'g' and engagement score 's', and emotion string
 g = 0
+s = 0
+detected_emotion = ''
 
 while True:
 
@@ -51,8 +42,7 @@ while True:
         # Analyze the emotion in the captured frame each "num_frames_emotion_analysis" frames
         if counter_frames % num_frames_emotion == 0:
             emotion = analyze_emotion(image_path)
-            emotion_dict[emotion] += 1
-            s = score(g/num_frames_emotion, emotion)
+            s, detected_emotion = score(g/num_frames_emotion, emotion)
             g = 0
 
         # Extract landmarks from the captured frame and extract gaze direction
@@ -123,9 +113,8 @@ while True:
                     if gaze == 'centered':
                         g += 1
                     
-
                     # Add the text on the image
-                    cv2.putText(frame, str(g), (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 2553, 0), 2)
+                    cv2.putText(frame,str(s) + ' '+ gaze+' '+ detected_emotion, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 2553, 0), 2)
 
                     # Show the output image
                     cv2.imshow("Gaze Estimation", frame)
