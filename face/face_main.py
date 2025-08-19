@@ -1,10 +1,10 @@
 import cv2
 import mediapipe as mp
-from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score
+from face.face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score
 
 # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
 counter_frames = 0
-num_frames_emotion = 20
+num_frames_emotion = 100
 
 # Initialize a dictionary to store emotion counts during simulation
 emotion_dict = {
@@ -27,7 +27,10 @@ mp_drawing = mp.solutions.drawing_utils
 if not camera.isOpened():
     raise("Error: Could not open camera. Check if the camera is connected, or change the idx of the camera in 'camera = cv2.VideoCapture(0)' line.")
     quit()
-    
+
+# Initialization of gaze score
+g = 0
+
 while True:
 
     #time.sleep(1)  # Sleep for a short time to avoid high CPU usage
@@ -45,14 +48,12 @@ while True:
         # Save the frame as an image file
         cv2.imwrite(image_path, frame)
 
-        g = 0  # Initialize the gaze variable to accumulate gaze direction
-        
         # Analyze the emotion in the captured frame each "num_frames_emotion_analysis" frames
         if counter_frames % num_frames_emotion == 0:
             emotion = analyze_emotion(image_path)
             emotion_dict[emotion] += 1
             s = score(g/num_frames_emotion, emotion)
-            g = 0  # Reset the gaze variable after scoring
+            g = 0
 
         # Extract landmarks from the captured frame and extract gaze direction
         # Firstly convert the image to RGB using cv2.cvtColor
@@ -119,11 +120,13 @@ while True:
                     cv2.line(frame, p1, p2, (255, 0, 0), 3)
                     cv2.line(frame, left_pupil, p3, (255, 0, 0), 3)
                     
-                    if type(gaze) is str:
-                        # Add the text on the image
-                        cv2.putText(frame, gaze, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 2553, 0), 2)
-                    else:
-                        g += gaze
+                    if gaze == 'centered':
+                        g += 1
+                    
+
+                    # Add the text on the image
+                    cv2.putText(frame, str(g), (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 2553, 0), 2)
+
                     # Show the output image
                     cv2.imshow("Gaze Estimation", frame)
             else:
@@ -133,8 +136,4 @@ while True:
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    camera.release()
-        
-
-
-
+camera.release()
