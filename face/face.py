@@ -88,6 +88,8 @@ def irid_pose_estimator(face_lm, w, h):
     # 468-472: left eye irid points
     # 473-477: right eye irid points
     
+    k = 10
+    
     landmarks_idx = [468, 469, 470, 471, 472, 473, 474, 475, 476, 477]
 
     # Create a list of 2D and 3D points for the other landmarks scaling the normalized coordinates to the image dimensions
@@ -95,8 +97,8 @@ def irid_pose_estimator(face_lm, w, h):
     irid_3d = [(int(face_lm.landmark[idx].x*w), int(face_lm.landmark[idx].y*h), face_lm.landmark[idx].z) for idx in landmarks_idx]
 
     # Convert the 2D and 3D points to numpy arrays
-    irid_2d_np = np.array(irid_2d, dtype=np.float32)
-    irid_3d_np = np.array(irid_3d, dtype=np.float32)
+    irid_2d_np = np.array(irid_2d, dtype=np.float32)# *k
+    irid_3d_np = np.array(irid_3d, dtype=np.float32)# *k
 
     # Define the camera matrix (assuming a simple pinhole camera model), focal length and distortion coefficients
     cx, cy = w / 2, h / 2  # Principal point (center of the image)
@@ -196,21 +198,52 @@ def gaze_estimator(theta_eye, theta_head):
         gaze_direction (str): The estimated gaze direction.
     """
 
-    threshold_head_x = 5  # Threshold for horizontal gaze direction of head
-    threshold_head_y = 3  # Threshold for vertical gaze direction of head
+    threshold_head_x = 6  # Threshold for horizontal gaze direction of head
+    threshold_head_y = 4  # Threshold for vertical gaze direction of head
     threshold_eye_x = 5  # Threshold for horizontal gaze direction of head
     threshold_eye_y = 3  # Threshold for vertical gaze direction of head
     epsilon_turn = 4  # Threshold for turning the head
     
     # Check if the gaze is centered based on the eye and head angles in particular check if the eyes are centered and the head is not turned too much
-    if (np.abs(theta_eye[0]) > threshold_eye_x or np.abs(theta_eye[1]) > threshold_eye_y):
-        return str(np.abs(theta_eye[0])) + "\n" + str(np.abs(theta_eye[1]))
+    if (np.abs(theta_head[0]) > threshold_head_x or np.abs(theta_head[1]) > threshold_head_y):
+        return str(np.abs(theta_head[0])) + "\n" + str(np.abs(theta_head[1]))
     # Check if the gaze is centered based on the eye and head angles in particular check if the eyes are turned in the same direction as the head
     #if (theta_eye[0] > epsilon_turn and theta_eye[1] > epsilon_turn and theta_eye[0] > epsilon_turn and theta_eye[1] > epsilon_turn) and ( theta_eye[0] - theta_head[0] > epsilon_turn or theta_eye[1] - theta_head[1] > epsilon_turn):
     #    return "Not Centered2 " + str(theta_eye[0] - theta_head[0]) + " " + str(theta_eye[1] - theta_head[1])
     
-    return "Centered"
+    return 1
     
+emotion_dict = {
+    'angry': 0,
+    'disgust': 0,
+    'fear': 0,
+    'happy': 0,
+    'sad': 0,
+    'surprise': 0,
+    'neutral': 0
+}
+    
+def score(gaze, emotion):
+    """Compute a score based on the gaze direction and emotion.
+    Args:
+        gaze (int): number of frames of centered gaze.
+        emotion (str): The emotion with the highest score.
+    Outputs:
+        score (int): The computed score.
+    """
+    
+    wg = 0.5  # Weight for gaze direction
+    we = 0.5  # Weight for emotion
+    
+    if emotion == "happy" or emotion == "surprise":
+        es = 1
+    elif emotion == "sad" or emotion == "angry" or emotion == "disgust" or emotion == "fear":
+        es = -1
+    elif emotion == "neutral":
+        es = 0
+        
+    return gaze * wg + es * we
+
 
 # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
 counter_frames = 0
@@ -244,6 +277,7 @@ while True:
 
     # Read a frame from the camera (ret is a boolean indicating success)
     ret, frame = camera.read()
+    #print(counter_frames)
     counter_frames += 1     # increment the frame counter
     
     if ret is True:
@@ -255,10 +289,14 @@ while True:
         # Save the frame as an image file
         cv2.imwrite(image_path, frame)
 
+        g = 0  # Initialize the gaze variable to accumulate gaze direction
+        
         # Analyze the emotion in the captured frame each "num_frames_emotion_analysis" frames
         if counter_frames % num_frames_emotion == 0:
             emotion = analyze_emotion(image_path)
             emotion_dict[emotion] += 1
+            #s = score(g/num_frames_emotion, emotion)
+            g = 0  # Reset the gaze variable after scoring
 
         # Extract landmarks from the captured frame and extract gaze direction
         # Firstly convert the image to RGB using cv2.cvtColor
@@ -276,6 +314,7 @@ while True:
             
             # Process the image to get face landmarks
             results = face_mesh.process(frame)
+            
             if results.multi_face_landmarks:
                 # Get the first detected face landmarks
                 face_lm = results.multi_face_landmarks[0]
@@ -292,7 +331,6 @@ while True:
                 # Gaze estimation
                 gaze = gaze_estimator(theta_eye, theta_head)
                 #print(f"State: {gaze}")
-            
                 # Display results
                 if irid_2d:
                     # Draw circles on the eye landmarks
@@ -325,21 +363,23 @@ while True:
                     cv2.line(frame, p1, p2, (255, 0, 0), 3)
                     cv2.line(frame, left_pupil, p3, (255, 0, 0), 3)
                     
-
-                    # Add the text on the image
-                    cv2.putText(frame, gaze, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 2553, 0), 2)
-
+                    if type(gaze) is str:
+                        # Add the text on the image
+                        cv2.putText(frame, gaze, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 2553, 0), 2)
+                    else:
+                        g += gaze
                     # Show the output image
                     cv2.imshow("Gaze Estimation", frame)
+                    print("imshow")
             else:
                 print("No landmarks detected.")
 
         # To stop the loop, press 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            print("Exiting the program.")
             break
 
-camera.release()
-    
-
+    camera.release()
+        
 
 
