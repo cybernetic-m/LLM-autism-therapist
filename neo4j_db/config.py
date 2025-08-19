@@ -3,10 +3,10 @@ import yaml
 
 # NEO4J VARIABLES
 if os.name == 'nt':  # 'nt' stands for Windows
-    with open("config.yaml", "r", encoding="utf-8") as f:
+    with open("config.db_config.yaml", "r", encoding="utf-8") as f:
             neo4j_data = yaml.safe_load(f)
 if os.name == 'posix':  # 'posix' stands for Linux or macOS
-    with open("neo4j_db/config.yaml", "r", encoding="utf-8") as f:
+    with open("config/db_config.yaml", "r", encoding="utf-8") as f:
             neo4j_data = yaml.safe_load(f)
 
 NEO4J_URI = neo4j_data["NEO4J_URI"]
