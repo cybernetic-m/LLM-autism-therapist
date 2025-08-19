@@ -7,12 +7,12 @@ from neo4j import GraphDatabase
 import datetime
 from neo4j.time import Date
 
+
 # Check the operating system, it is used for the import modules
 if os.name == 'nt':  # 'nt' stands for Windows
     from neo4j_db.config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
 elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from config import NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NODES, RELATIONSHIPS, ACTIVITIES
-
 
 class KnowledgeGraph:
     def __init__(self):
@@ -359,14 +359,12 @@ def kg_test():
 
 
 if __name__ == "__main__":
-    kg_test()
+    #kg_test()
 
     kg = KnowledgeGraph()
     #kg.add_activity(name= "marco", surname= "bomba", birthdate="2015-09-20", genre= "Fantasy", summary= "story about a fog", score = 0, activityClass="Storytelling" )
 
     #print(kg.get_child())
-
-
     print(kg.get_child(name = 'Massimo', surname = 'Romano'))
 
 

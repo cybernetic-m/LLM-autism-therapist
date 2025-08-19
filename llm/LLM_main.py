@@ -3,11 +3,12 @@ import os
 sys.path.insert(0, './audio') 
 sys.path.insert(0, './neo4j_db') 
 sys.path.insert(0, './llm')
-
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
+import os
+print("Current working directory:", os.getcwd())
+#import warnings
+#warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
 # Suppresses ALSA warnings/errors
-sys.stderr = open(os.devnull, 'w')
+#sys.stderr = open(os.devnull, 'w')
 
 import yaml
 import whisper
@@ -230,7 +231,7 @@ unknown_child = {
 if __name__ == '__main__':
 
     therapist_model = 'llama-3.3-70b-versatile'
-    db_model = 'gemma2-9b-it' # from 8 October 2025 SHOULD CHANGE TO 'llama-3.1-8b-instant'
+    db_model = 'llama-3.1-8b-instant' # from 8 October 2025 SHOULD CHANGE TO 'llama-3.1-8b-instant'
     whisper_model = whisper.load_model("medium")
     stop = ''
 
