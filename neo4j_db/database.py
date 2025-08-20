@@ -235,7 +235,7 @@ class KnowledgeGraph:
 
     def add_relationship_child_activity_detail(self, childID = None, name= None, surname= None, birthdate = None, activityDetailProperties= None, score= None, activityNodeName= None):
         # connects child to a new activity and the new activity to its class
-        relation = 'LIKES' if score > 0 else 'DISLIKES'
+        relation = 'LIKES' if score > 0.5 else 'DISLIKES'
 
         if childID is not None:
             start_node_match = {"Id": childID}
