@@ -63,11 +63,12 @@ def record_audio():
 
             # If the number of silent chunks exceeds the threshold, stop recording
             if silent_chunks >= threshold_silent_chunks:
-                print("\n---Silence detected, stopping recording---\n---Whisper is transcribing---")
+                print("\n---Fine Registrazione---")
                 break
 
     except KeyboardInterrupt:
-        print("\n---Stopped Recording---\n---Whisper is transcribing---")
+        pass
+        #print("\n---Stopped Recording---\n---Whisper is transcribing---")
 
     # Stop and close the stream
     stream.stop_stream()

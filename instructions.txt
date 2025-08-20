@@ -29,3 +29,7 @@ sudo apt-get install python3-tk
 To install for LLM:
 pip install pyyaml
 pip install neo4j
+
+
+To run the LLM_main use: 
+python llm/LLM_main.py 2>/dev/null

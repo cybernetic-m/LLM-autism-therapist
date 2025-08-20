@@ -106,30 +106,31 @@ else:
             "child_dislikes": child["DISLIKES"],
             "previous_activity": child.get("last_activity"),
         }
-print(data)
+#print(data)
 therapist = TherapistLLM(model_name=therapist_model)
 therapist.load_data(data)
 
 # Start the face thread before the interaction
 thread_face.start()
 
+print("\n-TERAPISTA:\n" + therapist.speak() +'\n')
+
 while True:
     if modality == '1':
         print("Parla ... per interrompere la registrazione premi Ctrl+C.")
         record_audio()  # Call the function to record audio
         response = audio_groq_api(api_key = groq_api_key, model_name = whisper_model_name, audio_path = 'audio.wav')
-        print("- TU\n" + response)
     else:
-        print("TU (per interrompere la conversazione scrivi 'q'): ")
+        print("- TU (per interrompere la conversazione scrivi 'q'): ")
         response = input("")
 
     therapist.add_child_response(response)
 
-    print("- TERAPISTA:\n" + therapist.speak())
+    print("\n-TERAPISTA:\n" + therapist.speak()+'\n')
     
     if modality == '1':
-        print("\nPremi 'q' per interrompere la conversazione o qualsiasi altro tasto per continuare: ")
-        stop = input("")
+        print("")
+        stop = input("Premi 'q' per interrompere la conversazione o qualsiasi altro tasto per continuare: ")
 
     if stop.lower() == 'q' or response=='q':
         print("Terapia terminata.")
@@ -142,7 +143,7 @@ score = q.get() # obtain the queue values (in our case only the score)
 
 db_llm = DatabaseLLM(api_key=groq_api_key, model_name=db_model)
 data_db_llm = '[CHILD INFO]:\n' + "name: " + data["child_name"] + "\nsurname: " + data["child_surname"] + "\nbirth: " + data["child_birth"] + "\n" + "[CONVERSATION]:" + therapist.session_history
-print(data_db_llm)
+#print(data_db_llm)
 db_llm.save_info(conversation= data_db_llm, verbose=True, score=score)
 
 
