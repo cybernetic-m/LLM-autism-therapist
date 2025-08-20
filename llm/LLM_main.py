@@ -54,7 +54,7 @@ unknown_child = {
 
 
 therapist_model = 'llama-3.3-70b-versatile'
-db_model = 'llama-3.1-8b-instant' # from 8 October 2025 SHOULD CHANGE TO 'llama-3.1-8b-instant'
+db_model = 'gemma2-9b-it' # from 8 October 2025 SHOULD CHANGE TO 'llama-3.1-8b-instant'
 whisper_model_name = 'whisper-large-v3'
 stop = ''
 
@@ -84,11 +84,14 @@ silenced_function = silence_function(face_thread, q,stop_event)
 # Create the face thread
 thread_face = threading.Thread(target=silenced_function, args=())
 
-name = input("Hi! What's your name? ")
-surname = input("And your surname? ")
-modality = input("Press 1 if you want to speak, or 2 if you want to write with keyboard: ")
+print("Ciao! Inserisci il tuo nome:")
+name = input("")
+print("Inserisci il tuo cognome:")
+surname = input("")
+print("Premi 1 se vuoi parlare, 2 se vuoi chattare:")
+modality = input("")
 if not (modality == '1' or modality == '2'):
-    print("Error: you choose a not valid modality!!!")
+    print("Error: hai scelto una modalità non valida!!! Scegli la '1' o la '2'.")
     exit()
 
 kg = KnowledgeGraph()
@@ -99,10 +102,16 @@ if len(all_data) == 0:
     data = unknown_child
     data["child_name"] = name
     data["child_surname"] = surname
-    sex = input("Are you a male or female? ")
-    data["child_gender"] = sex
+    print("Puoi specificare il tuo sesso? Scrivi 'Uomo' o 'Donna'")
+    sex = input("")
+    if sex == 'Uomo' or sex == 'Donna':
+        data["child_gender"] = sex
+    else:
+        print("Error: Hai specificato un sesso errato! Per favore scrivi 'Uomo' o 'Donna'.")
+        exit()
 elif len(all_data) > 1:
-    birth = input("Can you also tell me your birthdate?")
+    print("Puoi specificare la tua data di nascita (formato dd/mm/yyyy)?")
+    birth = input("")
 else:
     child = all_data[0]
     data = {
@@ -124,24 +133,25 @@ thread_face.start()
 
 while True:
     if modality == '1':
-        print("Recording... Speak now! If you want to stop the recording, press Ctrl+C.")
+        print("Parla ... per interrompere la registrazione premi Ctrl+C.")
         record_audio()  # Call the function to record audio
         response = audio_groq_api(api_key = groq_api_key, model_name = whisper_model_name, audio_path = 'audio.wav')
+        print("- TU\n" + response)
     else:
-        response = input("YOU (to stop write '0') : ")
+        print("TU (per interrompere la conversazione scrivi 'q'): ")
+        response = input("")
     
+    print("- TERAPISTA:\n")#therapist.speak()))
     therapist.add_child_response(response)
 
-    if modality == '1':
-        print("- YOU\n" + response)
-
-    print("- THERAPIST:\n" + therapist.speak())
+    print("- TERAPISTA:\n")#therapist.speak()))
     
     if modality == '1':
-        stop = input("\nPress 'q' to stop the conversation or any other key to continue: ")
+        print("\nPremi 'q' per interrompere la conversazione o qualsiasi altro tasto per continuare: ")
+        stop = input("")
 
-    if stop.lower() == 'q' or response=='0':
-        print("Conversation ended.")
+    if stop.lower() == 'q' or response=='q':
+        print("Terapia terminata.")
         break
 
 # Stop the face thread at the end of the conversation
