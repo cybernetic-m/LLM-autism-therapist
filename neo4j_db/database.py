@@ -359,12 +359,6 @@ def kg_test():
 
 
 if __name__ == "__main__":
-    #kg_test()
 
     kg = KnowledgeGraph()
-    #kg.add_activity(name= "marco", surname= "bomba", birthdate="2015-09-20", genre= "Fantasy", summary= "story about a fog", score = 0, activityClass="Storytelling" )
-
-    #print(kg.get_child())
-    print(kg.get_child(name = 'Massimo', surname = 'Romano'))
-
-
+    kg.erase_graph()
