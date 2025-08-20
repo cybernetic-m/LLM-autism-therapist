@@ -1,8 +1,6 @@
 import cv2
 import mediapipe as mp
 from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score
-#import threading
-#import queue
 
 
 def face_thread(q, stop_event):

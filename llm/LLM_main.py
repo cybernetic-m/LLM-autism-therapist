@@ -7,10 +7,12 @@ sys.path.insert(0, './neo4j_db')
 sys.path.insert(0, './llm')
 sys.path.insert(0, './face')
 
-#import warnings
-#warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
-#Suppresses ALSA warnings/errors
-#sys.stderr = open(os.devnull, 'w')
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
+sys.stderr = open(os.devnull, 'w')
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+warnings.filterwarnings("ignore")
+
 
 # Check the operating system, it is used for the import modules
 if os.name == 'nt':  # 'nt' stands for Windows
