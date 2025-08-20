@@ -1,13 +1,16 @@
 import sys
 import os
+import threading
+import queue
 sys.path.insert(0, './audio') 
 sys.path.insert(0, './neo4j_db') 
 sys.path.insert(0, './llm')
+sys.path.insert(0, './face')
 
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
+#import warnings
+#warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
 #Suppresses ALSA warnings/errors
-sys.stderr = open(os.devnull, 'w')
+#sys.stderr = open(os.devnull, 'w')
 
 # Check the operating system, it is used for the import modules
 if os.name == 'nt':  # 'nt' stands for Windows
@@ -16,6 +19,7 @@ if os.name == 'nt':  # 'nt' stands for Windows
     from audio.audio_api import audio_groq_api
     from llm.TherapistLLM import TherapistLLM
     from llm.DatabaseLLM import DatabaseLLM
+    from face.face_main import face_thread
     with open("api_key.txt", "r") as file:
         groq_api_key = file.read()
 
@@ -25,6 +29,7 @@ elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from audio_api import audio_groq_api
     from TherapistLLM import TherapistLLM
     from DatabaseLLM import DatabaseLLM
+    from face_main import face_thread
     with open("llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
 
@@ -50,6 +55,13 @@ therapist_model = 'llama-3.3-70b-versatile'
 db_model = 'llama-3.1-8b-instant' # from 8 October 2025 SHOULD CHANGE TO 'llama-3.1-8b-instant'
 whisper_model_name = 'whisper-large-v3'
 stop = ''
+
+# Create a stop event object for the face thread
+stop_event = threading.Event()
+# Create a queue for the results of the thread execution
+q = queue.Queue()
+# Create the face thread
+thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
 name = input("Hi! What's your name? ")
 surname = input("And your surname? ")
@@ -86,6 +98,9 @@ print(data)
 therapist = TherapistLLM(model_name=therapist_model)
 therapist.load_data(data)
 
+# Start the face thread before the interaction
+thread_face.start()
+
 while True:
     if modality == '1':
         print("Recording... Speak now! If you want to stop the recording, press Ctrl+C.")
@@ -107,11 +122,16 @@ while True:
     if stop.lower() == 'q' or response=='0':
         print("Conversation ended.")
         break
-    
+
+# Stop the face thread at the end of the conversation
+stop_event.set()
+thread_face.join()
+score = q.get() # obtain the queue values (in our case only the score)
+
 db_llm = DatabaseLLM(api_key=groq_api_key, model_name=db_model)
 data_db_llm = '[CHILD INFO]:\n' + "name: " + data["child_name"] + "\nsurname: " + data["child_surname"] + "\nbirth: " + data["child_birth"] + "\n" + "[CONVERSATION]:" + therapist.session_history
 print(data_db_llm)
-db_llm.save_info(conversation= data_db_llm, verbose=True, score=0)
+db_llm.save_info(conversation= data_db_llm, verbose=True, score=score)
 
 
 

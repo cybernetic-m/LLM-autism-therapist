@@ -196,7 +196,7 @@ def gaze_estimator(theta_eye, theta_head):
         gaze_direction (str): The estimated gaze direction.
     """
 
-    threshold_head_x = 12  # Threshold for horizontal gaze direction of head
+    threshold_head_x = 14  # Threshold for horizontal gaze direction of head
     threshold_head_y = 12  # Thresold for vertical gaze direction of head
     #threshold_eye_x = 5  # Threshold for horizontal gaze direction of head
     #threshold_eye_y = 3  # Threshold for vertical gaze direction of head

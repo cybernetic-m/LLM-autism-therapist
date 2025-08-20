@@ -1,11 +1,11 @@
 import cv2
 import mediapipe as mp
 from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score
-import threading
-import queue
+#import threading
+#import queue
 
 
-def my_function(q, stop_event):
+def face_thread(q, stop_event):
 
     # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
     counter_frames = 0
@@ -13,9 +13,6 @@ def my_function(q, stop_event):
 
     # Open the default camera (usually the first camera)
     camera = cv2.VideoCapture(0)
-
-    # Drawing utils of mediapipe for drawing landmarks on the image
-    mp_drawing = mp.solutions.drawing_utils
 
     # Check if the camera opened successfully
     if not camera.isOpened():
