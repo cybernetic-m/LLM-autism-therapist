@@ -58,12 +58,31 @@ db_model = 'llama-3.1-8b-instant' # from 8 October 2025 SHOULD CHANGE TO 'llama-
 whisper_model_name = 'whisper-large-v3'
 stop = ''
 
+
+
+def silence_function(func, *args, **kwargs):
+    def wrapper():
+        with open(os.devnull, 'w') as devnull:
+            original_stdout = sys.stdout
+            original_stderr = sys.stderr
+            sys.stdout = devnull
+            sys.stderr = devnull
+            try:
+                func(*args, **kwargs)
+            finally:
+                sys.stdout = original_stdout
+                sys.stderr = original_stderr
+    return wrapper
+
+
 # Create a stop event object for the face thread
 stop_event = threading.Event()
 # Create a queue for the results of the thread execution
 q = queue.Queue()
+
+silenced_function = silence_function(face_thread, q,stop_event)
 # Create the face thread
-thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+thread_face = threading.Thread(target=silenced_function, args=())
 
 name = input("Hi! What's your name? ")
 surname = input("And your surname? ")
