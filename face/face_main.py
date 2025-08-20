@@ -121,7 +121,8 @@ def face_thread(q, stop_event):
                         # Show the output image
                         cv2.imshow("Gaze Estimation", frame)
                 else:
-                    print("No landmarks detected.")
+                    pass
+                    #print("No landmarks detected.")
 
             # To stop the loop, press 'q'
             if cv2.waitKey(1) & 0xFF == ord('q'):

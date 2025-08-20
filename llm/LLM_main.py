@@ -58,31 +58,13 @@ db_model = 'gemma2-9b-it' # from 8 October 2025 SHOULD CHANGE TO 'llama-3.1-8b-i
 whisper_model_name = 'whisper-large-v3'
 stop = ''
 
-
-
-def silence_function(func, *args, **kwargs):
-    def wrapper():
-        with open(os.devnull, 'w') as devnull:
-            original_stdout = sys.stdout
-            original_stderr = sys.stderr
-            sys.stdout = devnull
-            sys.stderr = devnull
-            try:
-                func(*args, **kwargs)
-            finally:
-                sys.stdout = original_stdout
-                sys.stderr = original_stderr
-    return wrapper
-
-
 # Create a stop event object for the face thread
 stop_event = threading.Event()
 # Create a queue for the results of the thread execution
 q = queue.Queue()
 
-silenced_function = silence_function(face_thread, q,stop_event)
 # Create the face thread
-thread_face = threading.Thread(target=silenced_function, args=())
+thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
 print("Ciao! Inserisci il tuo nome:")
 name = input("")
@@ -140,11 +122,10 @@ while True:
     else:
         print("TU (per interrompere la conversazione scrivi 'q'): ")
         response = input("")
-    
-    print("- TERAPISTA:\n")#therapist.speak()))
+
     therapist.add_child_response(response)
 
-    print("- TERAPISTA:\n")#therapist.speak()))
+    print("- TERAPISTA:\n" + therapist.speak())
     
     if modality == '1':
         print("\nPremi 'q' per interrompere la conversazione o qualsiasi altro tasto per continuare: ")
