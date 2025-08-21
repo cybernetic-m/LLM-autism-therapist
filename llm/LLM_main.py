@@ -129,8 +129,8 @@ while True:
     print("\n-TERAPISTA:\n" + therapist.speak()+'\n')
     
     if modality == '1':
-        print("")
-        stop = input("Premi 'q' per interrompere la conversazione o qualsiasi altro tasto per continuare: ")
+        print("Premi 'q' per interrompere la conversazione o qualsiasi altro tasto per continuare: ")
+        stop = input("")
 
     if stop.lower() == 'q' or response=='q':
         print("Terapia terminata.")
