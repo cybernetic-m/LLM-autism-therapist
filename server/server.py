@@ -28,11 +28,10 @@ if os.name == 'nt':  # 'nt' stands for Windows
 
 elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from database import KnowledgeGraph
-    from audio import record_audio
     from audio_api import audio_groq_api
     from TherapistLLM import TherapistLLM
     from DatabaseLLM import DatabaseLLM
-    from face_main import face_thread
+    from gtts import gTTS
     with open("./llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
 
@@ -73,7 +72,10 @@ def get_audio_response(robot_text, chat_id):
     """Generate unique audio file with gTTS to avoid cache issues."""
     cleanup_old_audio(chat_id)
     unique_id = uuid.uuid4().hex
-    audio_path = f"static/audio_{chat_id}_{unique_id}.mp3"
+    if os.name == 'nt':
+        audio_path = f"static/audio_{chat_id}_{unique_id}.mp3"
+    elif os.name=='posix':
+        audio_path = f"./server/static/audio_{chat_id}_{unique_id}.mp3"
     tts = gTTS(robot_text, lang="it")
     tts.save(audio_path)
     return audio_path
