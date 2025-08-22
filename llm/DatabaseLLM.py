@@ -10,7 +10,7 @@ import os
 if os.name == 'nt':  # 'nt' stands for Windows
     from neo4j_db.database import KnowledgeGraph
     from llm.llm_api import call_translation_api
-    with open("api_key.txt", "r") as file:
+    with open("../llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
     with open("../config/llm_config.yaml", "r", encoding="utf-8") as f:
         prompts = yaml.safe_load(f)

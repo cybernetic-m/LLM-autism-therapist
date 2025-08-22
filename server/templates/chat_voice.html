@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adam - Chat vocale</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #4a4e69;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .message {
+      max-width: 70%;
+      padding: 0.8rem;
+      border-radius: 12px;
+    }
+    .child {
+      background: #90e0ef;
+      align-self: flex-end;
+    }
+    .robot {
+      background: #ffafcc;
+      align-self: flex-start;
+    }
+    .input-area {
+      display: flex;
+      padding: 0.8rem;
+      background: #fff;
+      border-top: 1px solid #ccc;
+      justify-content: center;
+    }
+    button {
+      padding: 0.8rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      background: #4a4e69;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #22223b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="exitBtn">⬅️ Esci</button>
+    <h2>Adam 🤖</h2>
+    <button id="switchModeBtn">✍️ Modalità testuale</button>
+  </header>
+
+  <div class="chat-box" id="chatBox">
+    <!-- Messaggi dinamici -->
+  </div>
+
+  <div class="input-area">
+    <button id="recordBtn">🎤 Registra</button>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chatBox');
+    const recordBtn = document.getElementById('recordBtn');
+    let recording = false;
+    let mediaRecorder;
+    let audioChunks = [];
+
+    function addMessage(text, sender) {
+      const msg = document.createElement("div"); 
+      msg.classList.add("message", sender);
+      msg.innerText = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Inizializza primo messaggio robot
+    window.onload = async function() {
+      const response = await fetch("/chat/start");
+      const data = await response.json();
+      addMessage(data.robot, "robot");
+    }
+
+    // Gestione registrazione audio
+recordBtn.addEventListener("click", async () => {
+  if (!recording) {
+    recording = true;
+    recordBtn.innerText = "⏹️ Termina registrazione";
+    audioChunks = [];
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    const analyser = audioContext.createAnalyser();
+    source.connect(analyser);
+
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+    let silenceStart = null;
+    const SILENCE_THRESHOLD = 0.01; // soglia volume
+    const SILENCE_TIMEOUT = 3000; // 3 secondi
+
+    function checkSilence() {
+      const dataArray = new Uint8Array(analyser.fftSize);
+      analyser.getByteTimeDomainData(dataArray);
+      const rms = Math.sqrt(dataArray.reduce((sum, v) => sum + (v-128)**2, 0) / dataArray.length) / 128;
+
+      if (rms < SILENCE_THRESHOLD) {
+        if (!silenceStart) silenceStart = Date.now();
+        else if (Date.now() - silenceStart > SILENCE_TIMEOUT) {
+          stopRecording();
+          return;
+        }
+      } else {
+        silenceStart = null;
+      }
+
+      if (recording) requestAnimationFrame(checkSilence);
+    }
+
+    checkSilence();
+
+    function stopRecording() {
+      recording = false;
+      recordBtn.innerText = "🎤 Registra";
+      mediaRecorder.stop();
+    }
+
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "audio.wav");
+
+      const response = await fetch("/chat/send_audio", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      addMessage(data.child, "child");
+      addMessage(data.robot, "robot");
+    };
+
+  } else {
+    recording = false;
+    recordBtn.innerText = "🎤 Registra";
+    mediaRecorder.stop();
+  }
+});
+
+    // Pulsante Esci
+    document.getElementById("exitBtn").addEventListener("click", async () => {
+      const response = await fetch("/chat/exit", { method: "POST" });
+      const data = await response.json();
+      if (data.link) {
+        window.open(data.link, "_blank");
+      }
+      window.location.href = "/";
+    });
+
+    // Cambia modalità a chat testuale
+    document.getElementById("switchModeBtn").addEventListener("click", () => {
+      window.location.href = "/chat";
+    });
+  </script>
+</body>
+</html>

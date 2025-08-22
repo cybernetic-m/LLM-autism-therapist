@@ -8,7 +8,10 @@ import os
 # Check the operating system, it is used for the import modules
 if os.name == 'nt':  # 'nt' stands for Windows
     from llm.llm_api import call_translation_api
-    with open("api_key.txt", "r") as file:
+
+    script_dir = os.path.dirname(__file__)
+    file_path = os.path.join(script_dir, "api_key.txt")
+    with open(file_path, "r") as file:
         groq_api_key = file.read()
     with open("../config/llm_config.yaml", "r", encoding="utf-8") as f:
         prompts = yaml.safe_load(f)

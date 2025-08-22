@@ -72,13 +72,12 @@
 </head>
 <body>
   <header>
-    <button onclick="exitChat()">⬅️ Esci</button>
+    <button id = "exitBtn">⬅️ Esci</button>
     <h2>Adam 🤖</h2>
     <button onclick="switchMode()">🎤 Modalità vocale</button>
   </header>
 
   <div class="chat-box" id="chatBox">
-    <!-- Messaggi dinamici -->
   </div>
 
   <div class="input-area">
@@ -90,7 +89,7 @@
     const chatBox = document.getElementById('chatBox');
     const messageInput = document.getElementById('messageInput');
 
-    // invio messaggio con invio
+    // send using the enter key
     messageInput.addEventListener("keypress", function(e) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -123,13 +122,30 @@
       addMessage(data.robot, "robot");
     }
 
-    function exitChat() {
-      window.location.href = "/";
+    window.onload = async function() {
+        const response = await fetch("/chat/start");
+        const data = await response.json();
+        addMessage(data.robot, "robot");
     }
+
+
 
     function switchMode() {
       window.location.href = "/chat_voice"; // da implementare lato Flask
     }
+
+
+
+    document.getElementById("exitBtn").addEventListener("click", async () => {
+        const response = await fetch("/chat/exit", { method: "POST" });
+        const data = await response.json();
+
+        if (data.link) {
+            window.open(data.link, "_blank"); // opens the questionair
+        }
+
+        window.location.href = "/"; // go home
+    });
   </script>
 </body>
 </html>
