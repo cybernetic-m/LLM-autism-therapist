@@ -6,3 +6,4 @@ pyaudio
 mediapipe
 numpy 
 tf-keras
+gtts
