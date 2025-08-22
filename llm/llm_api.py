@@ -11,7 +11,7 @@ import os
 
 # Check the operating system, it is used for the import modules
 if os.name == 'nt':  # 'nt' stands for Windows
-    with open("api_key.txt", "r") as file:
+    with open("../llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
 
 elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS

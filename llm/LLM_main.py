@@ -7,17 +7,17 @@ sys.path.insert(0, './neo4j_db')
 sys.path.insert(0, './llm')
 sys.path.insert(0, './face')
 
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
-sys.stderr = open(os.devnull, 'w')
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-warnings.filterwarnings("ignore")
+#import warnings
+#warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
+#sys.stderr = open(os.devnull, 'w')
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+#warnings.filterwarnings("ignore")
 
 
 # Check the operating system, it is used for the import modules
 if os.name == 'nt':  # 'nt' stands for Windows
     from neo4j_db.database import KnowledgeGraph
-    from audio.audio import record_audio, speech2text
+    from audio.audio import record_audio
     from audio.audio_api import audio_groq_api
     from llm.TherapistLLM import TherapistLLM
     from llm.DatabaseLLM import DatabaseLLM

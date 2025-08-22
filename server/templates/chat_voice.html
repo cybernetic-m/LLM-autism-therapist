@@ -1,0 +1,314 @@
+<!DOCTYPE html> 
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adam - Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #4a4e69;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .message {
+      max-width: 70%;
+      padding: 0.8rem;
+      border-radius: 12px;
+    }
+    .child {
+      background: #90e0ef;
+      align-self: flex-end;
+    }
+    .robot {
+      background: #ffafcc;
+      align-self: flex-start;
+    }
+    .input-area {
+      display: flex;
+      padding: 0.8rem;
+      background: #fff;
+      border-top: 1px solid #ccc;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.8rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      background: #4a4e69;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #22223b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="exitBtn">⬅️ Esci</button>
+    <h2>Adam 🤖</h2>
+    <button id="switchModeBtn">🎤 Switch to voice mode</button>
+  </header>
+
+  <div class="chat-box" id="chatBox">
+    <!-- Messaggi dinamici -->
+  </div>
+
+  <div class="input-area" id="inputArea">
+    <!-- Default: modalità testuale -->
+    <input type="text" id="childInput" placeholder="Scrivi un messaggio...">
+    <button id="sendBtn">➡️</button>
+  </div>
+
+<script>
+  const chatBox = document.getElementById('chatBox');
+  const inputArea = document.getElementById('inputArea');
+  const switchBtn = document.getElementById('switchModeBtn');
+  let mode = "{{mode}}" // initial mode from server
+  let recording = false;
+  let mediaRecorder;
+  let audioChunks = [];
+
+  // Track current robot audio
+  let currentAudio = null;
+
+  // Prevent sending multiple messages before robot answers
+  let waitingForRobot = false;
+
+  // Attach Enter key event for text input
+  function attachEnterInput(element){
+    element.addEventListener("keypress", function(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          document.getElementById("sendBtn").click();
+      }
+    });
+  }
+
+  // Add a message bubble to chat
+  function addMessage(text, sender) {
+    const msg = document.createElement("div"); 
+    msg.classList.add("message", sender);
+    msg.innerText = text;
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Utility to play robot audio and stop any previous one
+  function playRobotAudio(src) {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+    currentAudio = new Audio(src);
+    currentAudio.play();
+  }
+
+  // First robot message when chat starts
+  window.onload = async function() {
+    const response = await fetch("/chat/start");
+    const data = await response.json();
+    addMessage(data.robot, "robot");
+    if (data.robot_audio) {
+      playRobotAudio(data.robot_audio); // ✅ now uses global audio handler
+    }
+    useMode(mode); // ✅ initialize correct mode after page load
+  }
+
+  // Send text messages
+  function attachTextHandler() {
+    document.getElementById("sendBtn").addEventListener("click", async () => {
+      if (waitingForRobot) return; // block if robot is still answering
+
+      const input = document.getElementById("childInput");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      addMessage(text, "child");
+
+      waitingForRobot = true; // lock until response arrives
+
+      const response = await fetch("/chat/send_message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await response.json();
+      addMessage(data.robot, "robot");
+      if (data.robot_audio) {
+        playRobotAudio(data.robot_audio);
+      }
+
+      waitingForRobot = false; // unlock after robot answers
+    });
+
+    // Stop robot audio if user starts typing
+    document.getElementById("childInput").addEventListener("input", () => {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+    });
+  }
+
+  // Voice input with automatic stop after 3s of silence
+  function attachVoiceHandler() {
+    const recordBtn = document.getElementById("recordBtn");
+    recordBtn.addEventListener("click", async () => {
+        
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+
+      if (!recording) {
+        recording = true;
+        recordBtn.innerText = "⏹️ Stop recording";
+        audioChunks = [];
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Setup silence detection
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+        let silenceStart = null;
+        const SILENCE_THRESHOLD = 0.01;  
+        const SILENCE_TIMEOUT = 3000;    
+
+        function checkSilence() {
+          const dataArray = new Uint8Array(analyser.fftSize);
+          analyser.getByteTimeDomainData(dataArray);
+
+          const rms = Math.sqrt(
+            dataArray.reduce((sum, v) => sum + Math.pow(v - 128, 2), 0) / dataArray.length
+          ) / 128;
+
+          if (rms < SILENCE_THRESHOLD) {
+            if (!silenceStart) silenceStart = Date.now();
+            else if (Date.now() - silenceStart > SILENCE_TIMEOUT) {
+              stopRecording();
+              return;
+            }
+          } else {
+            silenceStart = null;
+          }
+
+          if (recording) requestAnimationFrame(checkSilence);
+        }
+
+        checkSilence();
+
+        function stopRecording() {
+          if (recording) {
+            recording = false;
+            recordBtn.innerText = "🎤 Record";
+            mediaRecorder.stop();
+          }
+        }
+
+        mediaRecorder.onstop = async () => {
+          if (waitingForRobot) return; // block if robot not finished
+          waitingForRobot = true;
+
+          const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+          const formData = new FormData();
+          formData.append("audio", audioBlob, "audio.wav");
+
+          const response = await fetch("/chat/send_audio", {
+            method: "POST",
+            body: formData
+          });
+
+          const data = await response.json();
+          addMessage(data.child, "child");
+          addMessage(data.robot, "robot");
+          if (data.robot_audio) {
+            playRobotAudio(data.robot_audio);
+          }
+
+          waitingForRobot = false; // unlock after robot answers
+        };
+
+      } else {
+        // Manual stop
+        recording = false;
+        recordBtn.innerText = "🎤 Record";
+        mediaRecorder.stop();
+      }
+    });
+  }
+
+  // Switch between text and voice mode
+  function useMode(newMode) {
+    mode = newMode; // ✅ update global variable
+    if(mode === 'voice'){
+      inputArea.innerHTML = `<button id="recordBtn">🎤 Record</button>`;
+      attachVoiceHandler();
+      switchBtn.innerText = "✍️ Switch to text mode";
+    }
+    else{
+      inputArea.innerHTML = `
+        <input type="text" id="childInput" placeholder="Type a message...">
+        <button id="sendBtn">➡️</button>`;
+      attachTextHandler();
+      switchBtn.innerText = "🎤 Switch to voice mode";
+      let text = document.getElementById("childInput");
+      attachEnterInput(text);
+    }
+  }
+
+  // Toggle between text and voice
+  switchBtn.addEventListener("click", () => {
+    if (mode === 'text') useMode('voice');
+    else useMode('text');
+  });
+
+  // Exit button
+  document.getElementById("exitBtn").addEventListener("click", async () => {
+    const response = await fetch("/chat/exit", { method: "POST" });
+    const data = await response.json();
+    if (data.link) {
+      window.open(data.link, "_blank");
+    }
+    window.location.href = "/";
+  });
+</script>
+
+</body>
+</html>

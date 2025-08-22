@@ -95,47 +95,41 @@
 
         <input type="hidden" name="modality" id="modality" value="">
 
-        <div class="buttons form-full">
-          <button type="button" class="voice" onclick="submitForm('voice')">🎤 Parla con la voce</button>
-          <button type="button" class="text" onclick="submitForm('text')">✍️ Scrivi un messaggio</button>
-        </div>
+        
+        <button type="submit" class="voice" onclick="document.getElementById('modality').value='voice'">🎤 Parla con la voce</button>
+        <button type="submit" class="text" onclick="document.getElementById('modality').value='text'">✍️ Scrivi un messaggio</button>
+
+        
     </form>
   </div>
 
-  <script>
-    // funzione che invia il form al server Flask
-    function submitForm(mode) {
-      const form = document.getElementById('loginForm');
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-      document.getElementById('modality').value = mode;
-      form.submit();
-    }
+<script>
+async function checkUser() {
+    const name = document.querySelector('input[name="name"]').value.trim();
+    const surname = document.querySelector('input[name="surname"]').value.trim();
+    const sexField = document.querySelector('input[name="sex"]');
+    const birthField = document.querySelector('input[name="birth"]');
 
-    // funzione opzionale per mostrare campi extra solo se il bambino non è registrato
-    async function checkChild() {
-      const name = document.querySelector('input[name="name"]').value.trim();
-      const surname = document.querySelector('input[name="surname"]').value.trim();
-      const optionalFields = document.querySelectorAll('.optional');
-
-      if (name && surname) {
+    if (name && surname) {
         const response = await fetch('/check_child', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({name, surname})
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, surname})
         });
         const result = await response.json();
-        optionalFields.forEach(f => f.style.display = result.isRegistered ? 'none' : 'block');
-      } else {
-        optionalFields.forEach(f => f.style.display = 'none');
-      }
-    }
 
-    // verifica ogni volta che i campi nome/cognome cambiano
-    document.querySelector('input[name="name"]').addEventListener('input', checkChild);
-    document.querySelector('input[name="surname"]').addEventListener('input', checkChild);
-  </script>
+        sexField.style.display = result.askSex ? 'block' : 'none';
+        birthField.style.display = result.askBirth ? 'block' : 'none';
+    } else {
+        sexField.style.display = 'none';
+        birthField.style.display = 'none';
+    }
+}
+
+
+// Controlla quando si cambia il nome o cognome
+document.querySelector('input[name="name"]').addEventListener('input', checkUser);
+document.querySelector('input[name="surname"]').addEventListener('input', checkUser);
+</script>
 </body>
 </html>
