@@ -3,6 +3,7 @@ import os
 import threading
 import queue
 import uuid
+import glob
 
 from flask import Flask, request, render_template, jsonify, redirect, url_for, session
 
@@ -70,11 +71,30 @@ FORM_LINK = 'https://forms.gle/dZcZWoxQqcNBP9zE8'
 
 def get_audio_response(robot_text, chat_id):
     """Generate unique audio file with gTTS to avoid cache issues."""
+    cleanup_old_audio(chat_id)
     unique_id = uuid.uuid4().hex
     audio_path = f"static/audio_{chat_id}_{unique_id}.mp3"
     tts = gTTS(robot_text, lang="it")
     tts.save(audio_path)
     return audio_path
+
+
+def cleanup_old_audio(chat_id=None):
+    """
+    Delete old audio files from the static folder.
+    If chat_id is provided, only delete files related to that chat session.
+    """
+    if chat_id:
+        pattern = f"static/audio_{chat_id}_*.mp3"
+    else:
+        pattern = "static/audio_*.mp3"
+
+    for file_path in glob.glob(pattern):
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            app.logger.warning(f"Failed to remove {file_path}: {e}")
+
 
 
 # Homepage
