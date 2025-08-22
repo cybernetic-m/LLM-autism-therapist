@@ -120,6 +120,10 @@
 
       const data = await response.json();
       addMessage(data.robot, "robot");
+      if (data.robot_audio) {
+        const audio = new Audio(data.robot_audio);
+        audio.play();
+        }
     }
 
     window.onload = async function() {

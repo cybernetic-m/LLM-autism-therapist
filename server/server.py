@@ -20,6 +20,7 @@ if os.name == 'nt':  # 'nt' stands for Windows
     from audio.audio_api import audio_groq_api
     from llm.TherapistLLM import TherapistLLM
     from llm.DatabaseLLM import DatabaseLLM
+    from gtts import gTTS
     #from face.face_main import face_thread
     with open("../llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
@@ -67,12 +68,22 @@ therapist = TherapistLLM(model_name=therapist_model)
 db_llm = DatabaseLLM(api_key=groq_api_key, model_name=db_model)
 FORM_LINK = 'https://forms.gle/dZcZWoxQqcNBP9zE8'
 
-# Pagina iniziale
+def get_audio_response(robot_text, chat_id):
+    """Generate unique audio file with gTTS to avoid cache issues."""
+    unique_id = uuid.uuid4().hex
+    audio_path = f"static/audio_{chat_id}_{unique_id}.mp3"
+    tts = gTTS(robot_text, lang="it")
+    tts.save(audio_path)
+    return audio_path
+
+
+# Homepage
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Check is the child is new or already registered
+
+# Check if the child is already registered or new
 @app.route('/check_child', methods=['POST'])
 def check_child():
     data = request.get_json()
@@ -82,16 +93,17 @@ def check_child():
     all_children = kg.get_child(name=name, surname=surname)
 
     if len(all_children) == 0:
-        # new child
+        # No child found → new child
         return jsonify({'askSex': True, 'askBirth': True})
     elif len(all_children) > 1:
-        # More than one child with the same name and surname
+        # Multiple children with same name → ask for birth date
         return jsonify({'askSex': False, 'askBirth': True})
     else:
-        # the child exist in the database
+        # Child already exists
         return jsonify({'askSex': False, 'askBirth': False, 'child': all_children[0]})
 
-# submit of data from home page
+
+# Submit child data from home page
 @app.route('/submit', methods=['POST'])
 def submit():
     name = request.form.get('name')
@@ -100,7 +112,7 @@ def submit():
     birth = request.form.get('birth')
     modality = request.form.get('modality')
 
-    if not sex: # the child exists
+    if not sex:  # Existing child
         if birth:
             child = kg.get_child(name=name, surname=surname, birth_date=birth)
         else:
@@ -117,70 +129,67 @@ def submit():
             "child_likes": child["LIKES"],
             "child_dislikes": child["DISLIKES"],
             "previous_activity": child.get("last_activity"),
-            }
-    else: # the child is new
+        }
+    else:  # New child
         data = unknown_child
         data["child_name"] = name
         data["child_surname"] = surname
         data["child_gender"] = sex
 
-
-    # save child data in the session
+    # Save child info and chat session
     session["child_data"] = data
-    session["chat_id"] = str(uuid.uuid4())  # id unique for chat session
+    session["chat_id"] = str(uuid.uuid4())
     therapist = TherapistLLM(model_name=therapist_model)
     therapist.load_data(data)
 
-    # save the therapist in the session
+    # Store active therapist instance
     active_chats[session["chat_id"]] = therapist
 
     app.logger.info(f"{data}")
 
-    if modality == 'chat':
-        return render_template('chat.html', child=data)
-    return render_template('chat_voice.html', child=data)
+    return render_template('chat_voice.html', child=data, mode=modality)
 
 
-# when the chat starts the therapist begins the conversation
+# Start the chat → therapist speaks first
 @app.route("/chat/start")
 def chat_start():
     chat_id = session.get("chat_id")
     therapist = active_chats.get(chat_id)
 
     if not therapist:
-        return jsonify({"error": "Sessione non trovata"}), 400
+        return jsonify({"error": "Session not found"}), 400
 
     first_message = therapist.speak()
-    return jsonify({"robot": first_message})
+    audio_path = get_audio_response(first_message, chat_id)
+    return jsonify({"robot": first_message, "robot_audio": f"/{audio_path}"})
 
 
-# handles when the child sends a message
+# Handle text messages from the child
 @app.route("/chat/send_message", methods=["POST"])
 def chat_message():
     chat_id = session.get("chat_id")
     therapist = active_chats.get(chat_id)
 
     if not therapist:
-        return jsonify({"error": "Sessione non trovata"}), 400
+        return jsonify({"error": "Session not found"}), 400
 
     data = request.get_json()
     response = data.get("message")
 
     therapist.add_child_response(response)
-    return jsonify({"child": response, "robot": therapist.speak()})
+    robot_text = therapist.speak()
+    audio_path = get_audio_response(robot_text, chat_id)
+    return jsonify({"child": response, "robot": robot_text, "robot_audio": f"/{audio_path}"})
 
-# handles chat exit and data savings
+
+# Handle chat exit and save data to DB
 @app.route("/chat/exit", methods=["POST"])
 def chat_exit():
     chat_id = session.get("chat_id")
     data = session.get("child_data", {})
-    therapist = active_chats.pop(chat_id, None)  # remove therapist
-    #stop_event.set()
-    #thread_face.join()
-    #score = q.get()  # obtain the queue values (in our case only the score)
+    therapist = active_chats.pop(chat_id, None)  # remove therapist instance
 
-    score = 0 # ELIMINARE
-
+    score = 0  # TODO: compute actual score
 
     if therapist:
         data_db_llm = (
@@ -194,39 +203,38 @@ def chat_exit():
         app.logger.info(f"exit from chat -> {data_db_llm}")
         db_llm.save_info(conversation=data_db_llm, verbose=True, score=score)
 
-    session.clear() # clear the session
+    session.clear()  # clear session after exit
 
     return jsonify({"link": FORM_LINK})
 
 
-
-# when audio is sent by chat_voice.html
+# Handle audio messages from the child
 @app.route("/chat/send_audio", methods=["POST"])
 def chat_audio():
     audio_file = request.files["audio"]
-    # Salva temporaneamente
     audio_path = f"temp_audio_{session['chat_id']}.wav"
     audio_file.save(audio_path)
 
-    # Trascrizione
-    response_text = audio_groq_api(api_key=groq_api_key,
-                                   model_name=whisper_model_name,
-                                   audio_path=audio_path)
+    # Transcribe with Whisper/Groq API
+    response_text = audio_groq_api(
+        api_key=groq_api_key,
+        model_name=whisper_model_name,
+        audio_path=audio_path
+    )
 
     app.logger.info(f"transcription -> {response_text}")
 
     chat_id = session.get("chat_id")
     therapist_instance = active_chats.get(chat_id)
     if therapist_instance is None:
-        return jsonify({"error": "Therapist non trovato"}), 400
+        return jsonify({"error": "Therapist not found"}), 400
 
     therapist_instance.add_child_response(response_text)
     app.logger.info(f"therapist -> {therapist_instance.data}")
 
-    return jsonify({
-        "child": response_text,
-        "robot": therapist_instance.speak()
-    })
+    robot_text = therapist_instance.speak()
+    audio_path = get_audio_response(robot_text, chat_id)
+    return jsonify({"child": response_text, "robot": robot_text, "robot_audio": f"/{audio_path}"})
 
 if __name__ == '__main__':
     app.run(debug=True)
