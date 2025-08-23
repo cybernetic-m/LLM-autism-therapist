@@ -1,4 +1,5 @@
 import math
+import threading
 import qi
 import argparse
 
@@ -8,17 +9,21 @@ class Robot:
         
         # Start of the session => The connection with Choreographe/Naoqi services
         self.session = self.initConnection(ip, port)
+        
         # Initialization of the Pepper services:
         # -  motion service: allow to move the joint of the robot 
         # -  posture_service: allow to make the robot go to different postures ['Crouch', 'LyingBack', 'Sit',...]
-        # -  animation_service: allow to start predefined animations [eg. gestures Hey_1 to hello]
         # -  tts_service: the TextToSpeech service allows the robot to speak
         self.motion_service = self.session.service("ALMotion")
         self.tts_service = self.session.service("ALTextToSpeech")
-        self.animation_service = self.session.service("ALAnimationPlayer")
-        self.ans_service = self.session.service("ALAnimatedSpeech")
         self.posture_service = self.session.service("ALRobotPosture")
 
+        # Definition of a list of all joints of right and left arms
+        self.joint_names = ['LElbowRoll', 'LElbowYaw', 'LHand', 'LShoulderPitch', 'LShoulderRoll', 'LWristYaw', 'RElbowRoll', 'RElbowYaw', 'RHand', 'RShoulderPitch', 'RShoulderRoll', 'RWristYaw']
+        self.isAbsolute = True  # boolean to set all the movements in an absolute reference frame
+        
+        # Set the robot to the starting state of joints
+        self.homing()
 
     def initConnection(self, ip, port):
         '''
@@ -58,30 +63,142 @@ class Robot:
 
         self.tts_service.say(sentence+ pause)
 
-    def hello_gesture(self):
+
+    def homing(self):
         
-        # Defining the name of the joints, the times of each joint motion and the variable is absolute for absolute values
-        joint_names = ['LElbowRoll', 'LElbowYaw', 'LHand', 'LShoulderPitch', 'LShoulderRoll', 'LWristYaw', 'RElbowRoll', 'RElbowYaw', 'RHand', 'RShoulderPitch', 'RShoulderRoll', 'RWristYaw']
-        times  = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-        isAbsolute = True
+        # Defining the times of each joint motion 
+        times  = [0.4, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        
+        # Starting position
+        angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
+        
+
+    def hello_gesture_1(self):
+        
+        # Defining the times of each joint motion 
+        times  = [0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
 
         # Starting position
         angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
-        self.motion_service.angleInterpolation(joint_names, angles_start, times, isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
         
         # Say Hello motion
         angles_t1 = [math.radians(-50.7), math.radians(-86.5), 0.98, math.radians(-3.6), math.radians(41.6), math.radians(12.5), math.radians(84.3), math.radians(61.4), 0.93, math.radians(118.5), math.radians(-34.0), math.radians(-11.5)]
-        self.motion_service.angleInterpolation(joint_names, angles_t1, times, isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
         angles_t2 = [math.radians(-78.1), math.radians(-86.5), 0.98, math.radians(-3.6), math.radians(41.6), math.radians(12.5), math.radians(84.3), math.radians(61.4), 0.93, math.radians(118.5), math.radians(-34.0), math.radians(-11.5)]
-        self.motion_service.angleInterpolation(joint_names, angles_t2, times, isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)
         angles_t3 = [math.radians(-30), math.radians(-86.5), 0.98, math.radians(-3.6), math.radians(41.6), math.radians(12.5), math.radians(84.3), math.radians(61.4), 0.93, math.radians(118.5), math.radians(-34.0), math.radians(-11.5)]
-        self.motion_service.angleInterpolation(joint_names, angles_t3, times, isAbsolute)        
+        self.motion_service.angleInterpolation(self.joint_names, angles_t3, times, self.isAbsolute)        
+        
+        # A second round
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t3, times, self.isAbsolute)        
+
+        # Returning to starting state
+        angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
+
+    def hello_gesture_2(self):
+        
+        # Defining the times of each joint motion 
+        times  = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+        # Starting position
+        angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
+        
+        # Say Hello motion
+        angles_t1 = [math.radians(-85.1), math.radians(-114.4), 0.98, math.radians(48.0), math.radians(21.6), math.radians(20.0), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        angles_t2 = [math.radians(-65.5), math.radians(-114.4), 0.98, math.radians(48.0), math.radians(21.6), math.radians(20.0), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)
+        
+        # A second round
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)        
+
+        # Returning to starting state
+        angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
+
+    def talking_gesture_single_arm(self):
+        
+        # Defining the times of each joint motion 
+        times  = [0.4, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+        # Starting position
+        angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
+        
+        # Moving the left arm up and down
+        angles_t1 = [math.radians(-55.2), math.radians(-88.4), 0.98, math.radians(30.3), math.radians(9.6), math.radians(-69.7), math.radians(84.3), math.radians(61.4), 0.93, math.radians(118.5), math.radians(-34.0), math.radians(-11.5)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        angles_t2 = [math.radians(-41.5), math.radians(-88.4), 0.98, math.radians(30.3), math.radians(9.6), math.radians(-69.7), math.radians(84.3), math.radians(61.4), 0.93, math.radians(118.5), math.radians(-34.0), math.radians(-11.5)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)        
+        
+        # Another round of motion
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute) 
+
+        # Another round of motion
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)
+
+        # Another round of motion
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)       
         
         # Returning to starting state
         angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
-        self.motion_service.angleInterpolation(joint_names, angles_start, times, isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
+
+    def talking_gesture_double_arm(self):
+        
+        # Defining the times of each joint motion 
+        times  = [0.4, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+
+        # Starting position
+        angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
+        
+        # Moving the left arm up and down
+        angles_t1 = [math.radians(-55.2), math.radians(-88.4), 0.98, math.radians(30.3), math.radians(9.6), math.radians(-69.7), math.radians(84.3), math.radians(61.4), 0.93, math.radians(118.5), math.radians(-34.0), math.radians(-11.5)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        angles_t2 = [math.radians(-41.5), math.radians(-88.4), 0.98, math.radians(30.3), math.radians(9.6), math.radians(-69.7), math.radians(84.3), math.radians(61.4), 0.93, math.radians(118.5), math.radians(-34.0), math.radians(-11.5)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)        
+        
+        # Another round of motion
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute) 
+
+        # Another round of motion
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)
+
+        # Another round of motion
+        self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
+        self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)       
+        
+        # Returning to starting state
+        angles_start = [math.radians(-24.8), math.radians(-91.4), 0.25, math.radians(95.1), math.radians(9.5), math.radians(10.7), math.radians(5.5), math.radians(96.7), 0.69, math.radians(81.6), math.radians(-5.8), math.radians(-1.7)]
+        self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
+
+    def speak_and_move(self, sentence, type_of_motion, t):
 
 
+        # In this method I have used threads, one for speak and one for moving the robot that enable the code to make run both the say and the motion at the same time in parallel
+        tts_thread = threading.Thread(target=self.say, args=(sentence, t))  # create a thread for the say method (target is the method to run)
+        motion_thread = threading.Thread(target= getattr(self, type_of_motion)) # create a thread for the motion method (target is the method to run) where fetch the method using the string 'type_of_motion' passed as argument
+    
+        tts_thread.start()  # start the thread
+        motion_thread.start() # continue before the previous line to start also this thread
+        
+        tts_thread.join()   # wait until the thread to speak is finished
+        motion_thread.join() #w ait until the thread to move is finished
+
+
+   
 
 
 if __name__ == "__main__":
@@ -94,6 +211,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     robot = Robot(ip=args.ip, port=args.port)
-    robot.say("Ciao a tutti", t=5)
-    robot.hello_gesture()
+    #robot.hello_gesture_1()   
+    #robot.say("Ciao", t=5)
+    robot.speak_and_move("Ciao, come stai?", type_of_motion="hello_gesture_2", t=5)
+
+    #robot.hello_gesture_2()
+    #robot.talking_gesture_single_arm()
+
 
