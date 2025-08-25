@@ -22,7 +22,7 @@ if os.name == 'nt':  # 'nt' stands for Windows
     from llm.TherapistLLM import TherapistLLM
     from llm.DatabaseLLM import DatabaseLLM
     from gtts import gTTS
-    from face.face_main import face_thread
+    #from face.face_main import face_thread
     with open("../llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
 
@@ -51,7 +51,7 @@ stop_event = threading.Event()
 # Create a queue for the results of the thread execution
 q = queue.Queue()
 # Create the face thread
-thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+#thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
 
 kg = KnowledgeGraph()
@@ -185,7 +185,7 @@ def chat_start():
     first_message = therapist.speak()
     audio_path = get_audio_response(first_message, chat_id)
 
-    thread_face.start()
+    #thread_face.start()
     return jsonify({"robot": first_message, "robot_audio": f"{audio_path}"})
 
 
@@ -216,8 +216,11 @@ def chat_exit():
 
     # Stop the face thread at the end of the conversation
     stop_event.set()
-    thread_face.join()
-    score = q.get()  # obtain the queue values (in our case only the score)
+    #thread_face.join()
+    try:
+        score = q.get_nowait()
+    except Exception:
+        score = 0  # default se non c'è niente in coda
 
     #score = 0
 
@@ -227,7 +230,7 @@ def chat_exit():
             f"name: {data['child_name']}\n"
             f"surname: {data['child_surname']}\n"
             f"birth: {data['child_birth']}\n"
-            f"previous activity: {data['previous_activity']}"
+            f"previous activity: {data['previous_activity']}\n"
             f"[CONVERSATION]: {therapist.session_history}"
         )
 

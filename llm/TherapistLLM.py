@@ -75,7 +75,8 @@ class TherapistLLM:
                                             system_prompt_template=self.system_prompt,
                                             user_prompt_template=formatted_user_prompt,
                                             temperature=1)
-        self.session_history += '\n -Therapist: ' + llm_response
+
         llm_response, self.last_gesture = llm_response.split('[GESTURE]:')
+        self.session_history += '\n -Therapist: ' + llm_response
         return llm_response
 

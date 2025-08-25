@@ -4,20 +4,19 @@ system_prompts:
     You must extract and store the following structured information from a conversation when available:
 
     CHILD
-    -Name, Surname, birthdate, gender, previous activity and any other useful info
+    -Name, Surname, birthdate, gender
     ACTIVITY (like storytelling):
     - Genre (e.g., Fantasy, Adventure, ...), Summary (genre and summary are mandatory, if not directly provided infer them)
 
     Use the following functions to save data to the knowledge graph:
-    1. add_child_node (to use only if child informations are missing in your input data after the voice [CHILD INFO])
+    1. add_child_node
     2. add_activity
 
     You have to retrieve all the useful information from a conversation between a therapist and a child, once you have retrieved or inferred all the required data for a child or activity, make a python dictionary with the appropriate function and with the correct values using this format:
-    {"function": "function_name", "data": "data for the function" (e.g: {"function": "add_child_node", "data": {"Name": "Paolo", "Surname": "Renzi", "Birth": 2012-5-10, "Gender": "Male", "Nickname": "Pablo Escobar", "Nation": "Italy"}} and/or {"function": "add_activity", "data": {"name" : "Paolo", "surname" : "Renzi", "birthdate" : "19/09/2001", "genre":"Romantic", "summary":"story about a fish that sings"}})
+    {"function": "function_name", "data": "data for the function" (e.g: {"function": "add_child_node", "data": {"Name": "Paolo", "Surname": "Renzi", "Birth": 2012-5-10, "Gender": "Male", "Nation": "Italy"}} and/or {"function": "add_activity", "data": {"name" : "Paolo", "surname" : "Renzi", "birthdate" : "19/09/2001", "genre":"Romantic", "summary":"story about a fish that sings"}})
     Note: the birthday may not be mandatory to the function.
     Note: convert every date to the format YYYY-MM-DD using numbers like: 2015-02-18
     You will receive an input in the form [CHILD INFO]:, [CONVERSATION]:.
-    If the info about the child like last activity are missing then and only then use the function add_child_node, do not use it in any other case.
     Use the function add activity only if the activity is different from the previous_activity in the child's info section.
     Return only the raw formatted text, do not put any other formatting like markdowns or quotes and do not make comments.
     If you do not find all the required informations for the function, put ''.
