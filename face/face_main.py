@@ -83,14 +83,14 @@ def face_thread(q, stop_event):
                     # Display results
                     if irid_2d:
                         # Draw circles on the eye landmarks
-                        for (x, y) in irid_2d:
-                            cv2.circle(frame, (x, y), radius=2, color=(255, 0, 0), thickness=-1)
+                        #for (x, y) in irid_2d:
+                        #    cv2.circle(frame, (x, y), radius=2, color=(255, 0, 0), thickness=-1)
                         #for (x, y) in right_eye_coords[-5:]:
                         #    cv2.circle(frame, (x, y), radius=2, color=(255, 0, 0), thickness=-1)
                         # Draw a red circle at the pupil
                         left_pupil = irid_2d[0]
-                        cv2.circle(frame, irid_2d[0], radius=8, color=(0, 255, 0), thickness=2)
-                        cv2.circle(frame, irid_2d[5], radius=8, color=(0, 255, 0), thickness=2)
+                        #cv2.circle(frame, irid_2d[0], radius=8, color=(0, 255, 0), thickness=2)
+                        #cv2.circle(frame, irid_2d[5], radius=8, color=(0, 255, 0), thickness=2)
 
                         # Draw the nose landmark and all the landmarks used for head pose estimation
                         cv2.circle(frame, (nose_2d[0], nose_2d[1]), radius=2, color=(0, 0, 255), thickness=-1)  # Draw line from center of left eye to pupil
@@ -107,10 +107,10 @@ def face_thread(q, stop_event):
                         '''
                         p1 = (int(nose_2d[0]), int(nose_2d[1]))
                         p2 = (int(nose_2d[0] + theta_head[1] * 2) , int(nose_2d[1] - theta_head[0] * 2))
-                        p3 = (int(left_pupil[0] + theta_eye[1] * 5) , int(left_pupil[1] - theta_eye[0] * 5))
+                        #p3 = (int(left_pupil[0] + theta_eye[1] * 5) , int(left_pupil[1] - theta_eye[0] * 5))
                 
                         cv2.line(frame, p1, p2, (255, 0, 0), 3)
-                        cv2.line(frame, left_pupil, p3, (255, 0, 0), 3)
+                        #cv2.line(frame, left_pupil, p3, (255, 0, 0), 3)
                         
                         if gaze == 'centered':
                             g += 1

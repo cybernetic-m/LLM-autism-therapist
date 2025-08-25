@@ -30,12 +30,14 @@ class Robot:
         self.homing()
 
     def initConnection(self, ip, port):
+
         '''
         Method to init the connection using the IP address of the robot and the port for the TCP communication
         Args:
         ip (str): the IP address of the robot
         port (int): the port of communication (IMPORTANT: you should check after opening choreographe in Edit/Preferences/Virtual Robot)
         '''
+
         try:
             connection_url = "tcp://" + ip + ":" + str(port)
             app = qi.Application(["Therapist", "--qi-url=" + connection_url])   # create the application object that is the bridge from our code to Choreographe
@@ -69,6 +71,10 @@ class Robot:
 
 
     def homing(self):
+
+        '''
+        This method set the robot to the starting position
+        '''
         
         # Defining the times of each joint motion 
         times  = [0.4, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
@@ -79,6 +85,12 @@ class Robot:
         
 
     def hello_gesture_1(self, t):
+
+        '''
+        This method make the robot say hello with the left arm
+        Args:
+            - t (int): it is the time but is useless in this method, I put it to have the same input of other motion methods
+        '''
         
         # Defining the times of each joint motion 
         times  = [0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
@@ -104,6 +116,12 @@ class Robot:
         self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
 
     def hello_gesture_2(self, t):
+
+        '''
+        This method make the robot say hello with the left arm in a different way with respect to hello_gesture_1
+        Args:
+            - t (int): it is the time but is useless in this method, I put it to have the same input of other motion methods
+        '''
         
         # Defining the times of each joint motion 
         times  = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
@@ -127,6 +145,12 @@ class Robot:
         self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
 
     def moving_gesture_single_arm(self, t):
+
+        '''
+        This method make the robot moving the right arm up and down
+        Args:
+            - t (int): it is the time that the say method will take to say the sentence and the motion will be done in parallel
+        '''
         
         # Defining the times of each joint motion 
         times  = [0.4, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
@@ -151,6 +175,12 @@ class Robot:
         self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
 
     def moving_gesture_double_arm(self, t):
+
+        '''
+        This method make the robot moving the right arm up and down and also the left arm up and down
+        Args:
+            - t (int): it is the time that the say method will take to say the sentence and the motion will be done in parallel
+        '''
         
         # Defining the times of each joint motion 
         times  = [0.4, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
@@ -175,6 +205,12 @@ class Robot:
         self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
 
     def approval_gesture(self, t):
+
+        '''
+        This method make the robot moving the head to say yes
+        Args:
+            - t (int): it is the time but is useless in this method, I put it to have the same input of other motion methods
+        '''
         
         # Defining the times of each joint motion 
         times  = [0.5, 0.5]
@@ -194,6 +230,12 @@ class Robot:
         self.motion_service.angleInterpolation(self.head, angles_start, times, self.isAbsolute)      
 
     def disapproval_gesture(self, t):
+            
+        '''
+        This method make the robot moving the head to say no
+        Args:
+            - t (int): it is the time but is useless in this method, I put it to have the same input of other motion methods
+        '''
         
         # Defining the times of each joint motion 
         times  = [0.5, 0.5]
@@ -218,6 +260,12 @@ class Robot:
 
     def surprise_gesture(self, t):
         
+        '''
+        This method make the robot moving the left arm to the mouth, equivalent to wow gesture
+        Args:
+            - t (int): it is the time that the say method will take to say the sentence and the motion will be done in parallel
+        '''
+                
         # Defining the times of each joint motion 
         times  = [0.4, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
         time_ref = time.time()  # reference time to check the time t of the motion
@@ -238,6 +286,12 @@ class Robot:
         self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
 
     def thinking_gesture(self, t):
+    
+        '''
+        This method make the robot moving the left arm to the head and moving the fingers to scratch the head, equivalent to thinking gesture
+        Args:
+            - t (int): it is the time that the say method will take to say the sentence and the motion will be done in parallel
+        '''
         
         # Defining the times of each joint motion 
         times  = [0.4, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
@@ -261,7 +315,19 @@ class Robot:
         self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
 
     def speak_and_move(self, sentence, type_of_motion, t):
-        # In this method I have used threads, one for speak and one for moving the robot that enable the code to make run both the say and the motion at the same time in parallel
+
+        '''
+        This method make the robot moving and speaking at the same time, using threads.
+        I have used one thread callled tts_thread for speaking
+        and one thread for moving the robot that enable the code to make run both the say and the motion at the same time in parallel.
+        The motion thread is created only if the type_of_motion passed as argument is in the list of admitted gestures self.admitted_gestures,
+        otherwise the robot only speaks.
+        
+        Args:
+            - sentence (str): the sentence to say
+            - type_of_motion (str): the type of motion that the robot has to do, it must be in the list self.admitted_gestures
+            - t (int): it is the time that the say method will take to say the sentence and the motion will be done in parallel
+        '''
 
         # I check if the type_of_motion passed as argument is in the list of admitted gestures
         if type_of_motion in self.admitted_gestures:
@@ -279,10 +345,8 @@ class Robot:
             motion_thread.join() #w ait until the thread to move is finished
 
 
-   
-
-
 if __name__ == "__main__":
+    
     # Argument Terminal Parser, you need to execute the code using "python Robot.py -ip {your_ip} -port {your_port}"
     parser = argparse.ArgumentParser(description="Robot IP and Port")
     parser.add_argument("-ip", type=str, default='127.0.0.1', help="IP address of the robot (e.g., 127.0.0.1)")
@@ -292,13 +356,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     robot = Robot(ip=args.ip, port=args.port)
-    #robot.hello_gesture_1()   
-    #robot.say("Ciao", t=5)
     gesture_list = ['prova','hello_gesture_1', 'hello_gesture_2', 'moving_gesture_single_arm', 'moving_gesture_double_arm', 'thinking_gesture', 'surprise_gesture', 'approval_gesture', 'disapproval_gesture'] 
     for gesture in gesture_list:
         robot.speak_and_move(gesture, type_of_motion=gesture, t=5) 
 
-    #robot.hello_gesture_2()
-    #robot.talking_gesture_single_arm()
+
 
 
