@@ -157,6 +157,7 @@ def submit():
         data["child_name"] = name
         data["child_surname"] = surname
         data["child_gender"] = sex
+        data["child_birth"] = birth
 
     # Save child info and chat session
     session["child_data"] = data
