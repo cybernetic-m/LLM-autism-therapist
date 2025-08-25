@@ -90,6 +90,38 @@
     button:hover {
       background: #22223b;
     }
+    .typing {
+  display: flex;
+  gap: 5px;
+  padding: 0.8rem;
+  border-radius: 12px;
+  background: #32b0fe;
+  color: #000;
+  align-self: flex-start;
+  width: fit-content;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  animation: blink 1.4s infinite both;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% { opacity: 0.2; transform: translateY(0); }
+  20% { opacity: 1; transform: translateY(-3px); }
+  100% { opacity: 0.2; transform: translateY(0); }
+}
+
   </style>
 </head>
 <body>
@@ -159,12 +191,14 @@
     addMessage(text, "child");
 
     waitingForRobot = true;
+    showTyping();
     const response = await fetch("/chat/send_message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text })
     });
     const data = await response.json();
+    hideTyping();
     addMessage(data.robot, "robot");
     if (data.robot_audio) playRobotAudio(data.robot_audio);
     waitingForRobot = false;
@@ -274,6 +308,22 @@
     if (data.link) window.open(data.link, "_blank");
     window.location.href = "/";
   });
+
+
+  function showTyping() {
+  const typing = document.createElement("div");
+  typing.classList.add("message", "typing");
+  typing.setAttribute("id", "typingIndicator");
+  typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+  chatBox.appendChild(typing);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function hideTyping() {
+  const typing = document.getElementById("typingIndicator");
+  if (typing) typing.remove();
+}
+
 </script>
 
 </body>

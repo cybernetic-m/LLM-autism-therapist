@@ -22,7 +22,7 @@ if os.name == 'nt':  # 'nt' stands for Windows
     from llm.TherapistLLM import TherapistLLM
     from llm.DatabaseLLM import DatabaseLLM
     from gtts import gTTS
-    #from face.face_main import face_thread
+    from face.face_main import face_thread
     with open("../llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
 
