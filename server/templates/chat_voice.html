@@ -221,10 +221,12 @@
 
   // Primo messaggio del robot
   window.onload = async function() {
+    showTyping()
     const response = await fetch("/chat/start");
     const data = await response.json();
     addMessage(data.robot, "robot");
     if (data.robot_audio) playRobotAudio(data.robot_audio);
+    hideTyping()
   }
 
   // Invia testo
