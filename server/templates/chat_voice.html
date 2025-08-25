@@ -36,6 +36,7 @@
     transform: translateX(-50%);
     margin: 0;
     font-size: 1.6rem;
+    pointer-events: none;
     }
 
     .chat-box {
@@ -86,6 +87,7 @@
       color: white;
       cursor: pointer;
       font-size: 1rem;
+      z-index: 3;
     }
     button:hover {
       background: #22223b;
@@ -121,6 +123,41 @@
   20% { opacity: 1; transform: translateY(-3px); }
   100% { opacity: 0.2; transform: translateY(0); }
 }
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.popup-content button {
+  margin-top: 1rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.2rem;
+  background: #4a4e69;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.popup-content button:hover {
+  background: #22223b;
+}
+
 
   </style>
 </head>
@@ -138,6 +175,16 @@
     <button id="recordBtn"><i class="fas fa-microphone"></i></button>
 
   </div>
+
+  <div id="audioPopup" class="popup">
+  <div class="popup-content">
+    <p>Iniziamo?</p>
+    <button id="enableAudioBtn">Sì</button>
+
+    <button id="goBack">No</button>
+  </div>
+</div>
+
 
 <script>
   const chatBox = document.getElementById('chatBox');
@@ -323,6 +370,24 @@ function hideTyping() {
   const typing = document.getElementById("typingIndicator");
   if (typing) typing.remove();
 }
+
+document.getElementById("enableAudioBtn").addEventListener("click", () => {
+  // sblocca l'audio
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+
+  // chiudi popup
+  document.getElementById("audioPopup").style.display = "none";
+
+});
+
+document.getElementById("goBack").addEventListener("click", () => {
+  window.location.href = "/"; // porta alla home
+});
+
+
 
 </script>
 
