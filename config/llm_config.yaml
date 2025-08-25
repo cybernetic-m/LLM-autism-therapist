@@ -20,6 +20,7 @@ system_prompts:
     Use the function add activity only if the activity is different from the previous_activity in the child's info section.
     Return only the raw formatted text, do not put any other formatting like markdowns or quotes and do not make comments.
     If you do not find all the required informations for the function, put ''.
+    If the voice last activity: is empty then save the child using add_child_node
 
 
   therapist: >
