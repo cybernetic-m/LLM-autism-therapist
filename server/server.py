@@ -31,6 +31,7 @@ elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from audio_api import audio_groq_api
     from TherapistLLM import TherapistLLM
     from DatabaseLLM import DatabaseLLM
+    from face_main import face_thread
     from gtts import gTTS
     with open("./llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
@@ -46,11 +47,11 @@ active_chats = {} # gestisce le chat attive sul server per vari utenti
 app.secret_key = "super_secret_key_change_me" # gestisce sessioni flask
 
 # Create a stop event object for the face thread
-#stop_event = threading.Event()
+stop_event = threading.Event()
 # Create a queue for the results of the thread execution
-#q = queue.Queue()
+q = queue.Queue()
 # Create the face thread
-#thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
 
 kg = KnowledgeGraph()
@@ -182,6 +183,8 @@ def chat_start():
 
     first_message = therapist.speak()
     audio_path = get_audio_response(first_message, chat_id)
+
+    thread_face.start()
     return jsonify({"robot": first_message, "robot_audio": f"{audio_path}"})
 
 
@@ -210,7 +213,12 @@ def chat_exit():
     data = session.get("child_data", {})
     therapist = active_chats.pop(chat_id, None)  # remove therapist instance
 
-    score = 0  # TODO: compute actual score
+    # Stop the face thread at the end of the conversation
+    stop_event.set()
+    thread_face.join()
+    score = q.get()  # obtain the queue values (in our case only the score)
+
+    #score = 0
 
     if therapist:
         data_db_llm = (
