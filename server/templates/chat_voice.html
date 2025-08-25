@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Adam - Chat</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
   <style>
     body {
       margin: 0;
@@ -12,22 +14,37 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      
+      background: linear-gradient(to bottom, #000743, #5656ff);
     }
+
     header {
-      background: #4a4e69;
-      color: white;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    position: relative; /* necessario per il titolo assoluto */
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #4a4e69;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
     }
+
+    header h2 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 1.6rem;
+    }
+
     .chat-box {
       flex: 1;
       padding: 1rem;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.5rem; 
     }
     .message {
       max-width: 70%;
@@ -35,24 +52,28 @@
       border-radius: 12px;
     }
     .child {
-      background: #90e0ef;
+      background: #00d290;
       align-self: flex-end;
+      color: #000000;
     }
     .robot {
-      background: #ffafcc;
+      background: #0073bb;
+      color: #000000;
       align-self: flex-start;
     }
     .input-area {
       display: flex;
       padding: 0.8rem;
-      background: #fff;
+      background: transparent;
       border-top: 1px solid #ccc;
       justify-content: center;
       gap: 0.5rem;
+      border-radius: 1%;
+      border: 1px solid black;
     }
     input[type="text"] {
       flex: 1;
-      padding: 0.6rem;
+      padding: 1rem;
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 1rem;
@@ -75,45 +96,33 @@
   <header>
     <button id="exitBtn">⬅️ Esci</button>
     <h2>Adam 🤖</h2>
-    <button id="switchModeBtn">🎤 Switch to voice mode</button>
   </header>
 
-  <div class="chat-box" id="chatBox">
-    <!-- Messaggi dinamici -->
-  </div>
+  <div class="chat-box" id="chatBox"></div>
 
   <div class="input-area" id="inputArea">
-    <!-- Default: modalità testuale -->
     <input type="text" id="childInput" placeholder="Scrivi un messaggio...">
-    <button id="sendBtn">➡️</button>
+    <button id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+    <button id="recordBtn"><i class="fas fa-microphone"></i></button>
+
   </div>
 
 <script>
   const chatBox = document.getElementById('chatBox');
-  const inputArea = document.getElementById('inputArea');
-  const switchBtn = document.getElementById('switchModeBtn');
-  let mode = "{{mode}}" // initial mode from server
   let recording = false;
   let mediaRecorder;
   let audioChunks = [];
-
-  // Track current robot audio
   let currentAudio = null;
-
-  // Prevent sending multiple messages before robot answers
   let waitingForRobot = false;
 
-  // Attach Enter key event for text input
-  function attachEnterInput(element){
-    element.addEventListener("keypress", function(e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          document.getElementById("sendBtn").click();
-      }
-    });
-  }
+  // Enter key = invio messaggio
+  document.getElementById("childInput").addEventListener("keypress", function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      document.getElementById("sendBtn").click();
+    }
+  });
 
-  // Add a message bubble to chat
   function addMessage(text, sender) {
     const msg = document.createElement("div"); 
     msg.classList.add("message", sender);
@@ -122,7 +131,6 @@
     chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  // Utility to play robot audio and stop any previous one
   function playRobotAudio(src) {
     if (currentAudio) {
       currentAudio.pause();
@@ -132,180 +140,138 @@
     currentAudio.play();
   }
 
-  // First robot message when chat starts
+  // Primo messaggio del robot
   window.onload = async function() {
     const response = await fetch("/chat/start");
     const data = await response.json();
     addMessage(data.robot, "robot");
-    if (data.robot_audio) {
-      playRobotAudio(data.robot_audio); // ✅ now uses global audio handler
+    if (data.robot_audio) playRobotAudio(data.robot_audio);
+  }
+
+  // Invia testo
+  document.getElementById("sendBtn").addEventListener("click", async () => {
+    if (waitingForRobot) return;
+
+    const input = document.getElementById("childInput");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    addMessage(text, "child");
+
+    waitingForRobot = true;
+    const response = await fetch("/chat/send_message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await response.json();
+    addMessage(data.robot, "robot");
+    if (data.robot_audio) playRobotAudio(data.robot_audio);
+    waitingForRobot = false;
+  });
+
+  // Ferma audio robot se scrivo
+  document.getElementById("childInput").addEventListener("input", () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
     }
-    useMode(mode); // ✅ initialize correct mode after page load
-  }
+  });
 
-  // Send text messages
-  function attachTextHandler() {
-    document.getElementById("sendBtn").addEventListener("click", async () => {
-      if (waitingForRobot) return; // block if robot is still answering
-
-      const input = document.getElementById("childInput");
-      const text = input.value.trim();
-      if (!text) return;
-      input.value = "";
-      addMessage(text, "child");
-
-      waitingForRobot = true; // lock until response arrives
-
-      const response = await fetch("/chat/send_message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text })
-      });
-      const data = await response.json();
-      addMessage(data.robot, "robot");
-      if (data.robot_audio) {
-        playRobotAudio(data.robot_audio);
-      }
-
-      waitingForRobot = false; // unlock after robot answers
-    });
-
-    // Stop robot audio if user starts typing
-    document.getElementById("childInput").addEventListener("input", () => {
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-      }
-    });
-  }
-
-  // Voice input with automatic stop after 3s of silence
-  function attachVoiceHandler() {
-    const recordBtn = document.getElementById("recordBtn");
-    recordBtn.addEventListener("click", async () => {
-        
+  // Registrazione vocale
+  document.getElementById("recordBtn").addEventListener("click", async () => {
     if (currentAudio) {
       currentAudio.pause();
       currentAudio.currentTime = 0;
     }
 
-      if (!recording) {
+    if (!recording) {
+      // Inizio registrazione
         recording = true;
-        recordBtn.innerText = "⏹️ Stop recording";
-        audioChunks = [];
+        document.getElementById("recordBtn").innerHTML = '<i class="fas fa-stop"></i>';
 
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        // Setup silence detection
-        const audioContext = new AudioContext();
-        const source = audioContext.createMediaStreamSource(stream);
-        const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 2048;
-        source.connect(analyser);
+      audioChunks = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.start();
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      source.connect(analyser);
 
-        let silenceStart = null;
-        const SILENCE_THRESHOLD = 0.01;  
-        const SILENCE_TIMEOUT = 3000;    
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
-        function checkSilence() {
-          const dataArray = new Uint8Array(analyser.fftSize);
-          analyser.getByteTimeDomainData(dataArray);
+      let silenceStart = null;
+      const SILENCE_THRESHOLD = 0.01;  
+      const SILENCE_TIMEOUT = 3000;    
 
-          const rms = Math.sqrt(
-            dataArray.reduce((sum, v) => sum + Math.pow(v - 128, 2), 0) / dataArray.length
-          ) / 128;
+      function checkSilence() {
+        const dataArray = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(dataArray);
+        const rms = Math.sqrt(
+          dataArray.reduce((sum, v) => sum + Math.pow(v - 128, 2), 0) / dataArray.length
+        ) / 128;
 
-          if (rms < SILENCE_THRESHOLD) {
-            if (!silenceStart) silenceStart = Date.now();
-            else if (Date.now() - silenceStart > SILENCE_TIMEOUT) {
-              stopRecording();
-              return;
-            }
-          } else {
-            silenceStart = null;
+        if (rms < SILENCE_THRESHOLD) {
+          if (!silenceStart) silenceStart = Date.now();
+          else if (Date.now() - silenceStart > SILENCE_TIMEOUT) {
+            stopRecording();
+            return;
           }
-
-          if (recording) requestAnimationFrame(checkSilence);
+        } else {
+          silenceStart = null;
         }
 
-        checkSilence();
-
-        function stopRecording() {
-          if (recording) {
-            recording = false;
-            recordBtn.innerText = "🎤 Record";
-            mediaRecorder.stop();
-          }
-        }
-
-        mediaRecorder.onstop = async () => {
-          if (waitingForRobot) return; // block if robot not finished
-          waitingForRobot = true;
-
-          const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-          const formData = new FormData();
-          formData.append("audio", audioBlob, "audio.wav");
-
-          const response = await fetch("/chat/send_audio", {
-            method: "POST",
-            body: formData
-          });
-
-          const data = await response.json();
-          addMessage(data.child, "child");
-          addMessage(data.robot, "robot");
-          if (data.robot_audio) {
-            playRobotAudio(data.robot_audio);
-          }
-
-          waitingForRobot = false; // unlock after robot answers
-        };
-
-      } else {
-        // Manual stop
-        recording = false;
-        recordBtn.innerText = "🎤 Record";
-        mediaRecorder.stop();
+        if (recording) requestAnimationFrame(checkSilence);
       }
-    });
-  }
 
-  // Switch between text and voice mode
-  function useMode(newMode) {
-    mode = newMode; // ✅ update global variable
-    if(mode === 'voice'){
-      inputArea.innerHTML = `<button id="recordBtn">🎤 Record</button>`;
-      attachVoiceHandler();
-      switchBtn.innerText = "✍️ Switch to text mode";
-    }
-    else{
-      inputArea.innerHTML = `
-        <input type="text" id="childInput" placeholder="Type a message...">
-        <button id="sendBtn">➡️</button>`;
-      attachTextHandler();
-      switchBtn.innerText = "🎤 Switch to voice mode";
-      let text = document.getElementById("childInput");
-      attachEnterInput(text);
-    }
-  }
+      checkSilence();
 
-  // Toggle between text and voice
-  switchBtn.addEventListener("click", () => {
-    if (mode === 'text') useMode('voice');
-    else useMode('text');
+      function stopRecording() {
+        if (recording) {
+            recording = false;
+            document.getElementById("recordBtn").innerHTML = '<i class="fas fa-microphone"></i>';
+            mediaRecorder.stop();
+        }
+      }
+
+      mediaRecorder.onstop = async () => {
+        if (waitingForRobot) return;
+        waitingForRobot = true;
+
+        const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "audio.wav");
+
+        const response = await fetch("/chat/send_audio", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+        addMessage(data.child, "child");
+        addMessage(data.robot, "robot");
+        if (data.robot_audio) playRobotAudio(data.robot_audio);
+
+        waitingForRobot = false;
+      };
+
+    } else {
+      // stop manuale
+      recording = false;
+      document.getElementById("recordBtn").innerHTML = '<i class="fas fa-microphone"></i>';
+      mediaRecorder.stop();
+    }
   });
 
-  // Exit button
+  // Esci
   document.getElementById("exitBtn").addEventListener("click", async () => {
     const response = await fetch("/chat/exit", { method: "POST" });
     const data = await response.json();
-    if (data.link) {
-      window.open(data.link, "_blank");
-    }
+    if (data.link) window.open(data.link, "_blank");
     window.location.href = "/";
   });
 </script>

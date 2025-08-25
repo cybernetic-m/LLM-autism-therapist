@@ -70,7 +70,7 @@ FORM_LINK = 'https://forms.gle/dZcZWoxQqcNBP9zE8'
 
 def get_audio_response(robot_text, chat_id):
     """Generate unique audio file with gTTS to avoid cache issues."""
-    cleanup_old_audio(chat_id)
+    cleanup_all_audio()
     unique_id = uuid.uuid4().hex
 
     # File system path (per salvare il file)
@@ -85,21 +85,18 @@ def get_audio_response(robot_text, chat_id):
     return f"/static/{file_name}"
 
 
-
-def cleanup_old_audio(chat_id=None):
+def cleanup_all_audio():
     static_dir = os.path.join(app.root_path, "static")
-    if chat_id:
-        pattern = os.path.join(static_dir, f"audio_{chat_id}_*.mp3")
-    else:
-        pattern = os.path.join(static_dir, "audio_*.mp3")
+    # Cerca tutti i file audio con estensioni comuni
+    audio_extensions = ("*.mp3", "*.wav", "*.ogg", "*.m4a")
 
-    for file_path in glob.glob(pattern):
-        try:
-            os.remove(file_path)
-        except Exception as e:
-            app.logger.warning(f"Failed to remove {file_path}: {e}")
-
-
+    for ext in audio_extensions:
+        pattern = os.path.join(static_dir, ext)
+        for file_path in glob.glob(pattern):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                app.logger.warning(f"Failed to remove {file_path}: {e}")
 
 # Homepage
 @app.route('/')
@@ -228,41 +225,19 @@ def chat_exit():
         db_llm.save_info(conversation=data_db_llm, verbose=True, score=score)
 
     session.clear()  # clear session after exit
+    cleanup_all_audio()
 
     return jsonify({"link": FORM_LINK})
 
 UPLOAD_FOLDER = os.path.join(app.root_path, "uploads", "temp")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-'''
-@app.route("/chat/send_audio", methods=["POST"])
-def chat_audio():
-    audio_file = request.files["audio"]
 
-    # Salva in uploads/temp/
-    audio_path = os.path.join(UPLOAD_FOLDER, f"{session['chat_id']}.wav")
-    audio_file.save(audio_path)
-
-    # Trascrizione
-    response_text = audio_groq_api(
-        api_key=groq_api_key,
-        model_name=whisper_model_name,
-        audio_path=audio_path
-    )
-
-    app.logger.info(f"transcription -> {response_text}")
-
-    # Pulisci subito dopo aver usato il file
-    try:
-        os.remove(audio_path)
-    except Exception as e:
-        app.logger.warning(f"Non riesco a eliminare {audio_path}: {e}")
-'''
 
 # Handle audio messages from the child
 @app.route("/chat/send_audio", methods=["POST"])
 def chat_audio():
     audio_file = request.files["audio"]
-    audio_path = f"temp_audio_{session['chat_id']}.wav"
+    audio_path = f"static/user_audio_{session['chat_id']}.wav"
     audio_file.save(audio_path)
 
     # Transcribe with Whisper/Groq API
