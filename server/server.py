@@ -51,7 +51,7 @@ stop_event = threading.Event()
 # Create a queue for the results of the thread execution
 q = queue.Queue()
 # Create the face thread
-#thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
 
 kg = KnowledgeGraph()
@@ -185,7 +185,7 @@ def chat_start():
     first_message = therapist.speak()
     audio_path = get_audio_response(first_message, chat_id)
 
-    #thread_face.start()
+    thread_face.start()
     return jsonify({"robot": first_message, "robot_audio": f"{audio_path}"})
 
 
@@ -216,7 +216,7 @@ def chat_exit():
 
     # Stop the face thread at the end of the conversation
     stop_event.set()
-    #thread_face.join()
+    thread_face.join()
     try:
         score = q.get_nowait()
     except Exception:
