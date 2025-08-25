@@ -186,7 +186,6 @@ class Robot:
 
     def speak_and_move(self, sentence, type_of_motion, t):
 
-
         # In this method I have used threads, one for speak and one for moving the robot that enable the code to make run both the say and the motion at the same time in parallel
         tts_thread = threading.Thread(target=self.say, args=(sentence, t))  # create a thread for the say method (target is the method to run)
         motion_thread = threading.Thread(target= getattr(self, type_of_motion)) # create a thread for the motion method (target is the method to run) where fetch the method using the string 'type_of_motion' passed as argument

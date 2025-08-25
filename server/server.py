@@ -76,6 +76,7 @@ def get_audio_response(robot_text, chat_id):
     # File system path (per salvare il file)
     file_name = f"audio_{chat_id}_{unique_id}.mp3"
     file_path = os.path.join(app.root_path, "static", file_name)
+    print(f"Saving audio to {file_path}")
 
     tts = gTTS(robot_text, lang="it")
     tts.save(file_path)
@@ -184,7 +185,7 @@ def chat_start():
 
     first_message = therapist.speak()
     audio_path = get_audio_response(first_message, chat_id)
-    return jsonify({"robot": first_message, "robot_audio": f"/{audio_path}"})
+    return jsonify({"robot": first_message, "robot_audio": f"{audio_path}"})
 
 
 # Handle text messages from the child
@@ -202,7 +203,7 @@ def chat_message():
     therapist.add_child_response(response)
     robot_text = therapist.speak()
     audio_path = get_audio_response(robot_text, chat_id)
-    return jsonify({"child": response, "robot": robot_text, "robot_audio": f"/{audio_path}"})
+    return jsonify({"child": response, "robot": robot_text, "robot_audio": f"{audio_path}"})
 
 
 # Handle chat exit and save data to DB
@@ -230,6 +231,32 @@ def chat_exit():
 
     return jsonify({"link": FORM_LINK})
 
+UPLOAD_FOLDER = os.path.join(app.root_path, "uploads", "temp")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+'''
+@app.route("/chat/send_audio", methods=["POST"])
+def chat_audio():
+    audio_file = request.files["audio"]
+
+    # Salva in uploads/temp/
+    audio_path = os.path.join(UPLOAD_FOLDER, f"{session['chat_id']}.wav")
+    audio_file.save(audio_path)
+
+    # Trascrizione
+    response_text = audio_groq_api(
+        api_key=groq_api_key,
+        model_name=whisper_model_name,
+        audio_path=audio_path
+    )
+
+    app.logger.info(f"transcription -> {response_text}")
+
+    # Pulisci subito dopo aver usato il file
+    try:
+        os.remove(audio_path)
+    except Exception as e:
+        app.logger.warning(f"Non riesco a eliminare {audio_path}: {e}")
+'''
 
 # Handle audio messages from the child
 @app.route("/chat/send_audio", methods=["POST"])
@@ -257,7 +284,7 @@ def chat_audio():
 
     robot_text = therapist_instance.speak()
     audio_path = get_audio_response(robot_text, chat_id)
-    return jsonify({"child": response_text, "robot": robot_text, "robot_audio": f"/{audio_path}"})
+    return jsonify({"child": response_text, "robot": robot_text, "robot_audio": f"{audio_path}"})
 
 if __name__ == '__main__':
     app.run(debug=True)
