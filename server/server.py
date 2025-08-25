@@ -218,6 +218,7 @@ def chat_exit():
             f"name: {data['child_name']}\n"
             f"surname: {data['child_surname']}\n"
             f"birth: {data['child_birth']}\n"
+            f"previous activity: {data['previous_activity']}"
             f"[CONVERSATION]: {therapist.session_history}"
         )
 
