@@ -72,24 +72,25 @@ def get_audio_response(robot_text, chat_id):
     """Generate unique audio file with gTTS to avoid cache issues."""
     cleanup_old_audio(chat_id)
     unique_id = uuid.uuid4().hex
-    if os.name == 'nt':
-        audio_path = f"static/audio_{chat_id}_{unique_id}.mp3"
-    elif os.name=='posix':
-        audio_path = f"./server/static/audio_{chat_id}_{unique_id}.mp3"
+
+    # File system path (per salvare il file)
+    file_name = f"audio_{chat_id}_{unique_id}.mp3"
+    file_path = os.path.join(app.root_path, "static", file_name)
+
     tts = gTTS(robot_text, lang="it")
-    tts.save(audio_path)
-    return audio_path
+    tts.save(file_path)
+
+    # Web path (per farlo leggere dal browser)
+    return f"/static/{file_name}"
+
 
 
 def cleanup_old_audio(chat_id=None):
-    """
-    Delete old audio files from the static folder.
-    If chat_id is provided, only delete files related to that chat session.
-    """
+    static_dir = os.path.join(app.root_path, "static")
     if chat_id:
-        pattern = f"static/audio_{chat_id}_*.mp3"
+        pattern = os.path.join(static_dir, f"audio_{chat_id}_*.mp3")
     else:
-        pattern = "static/audio_*.mp3"
+        pattern = os.path.join(static_dir, "audio_*.mp3")
 
     for file_path in glob.glob(pattern):
         try:
