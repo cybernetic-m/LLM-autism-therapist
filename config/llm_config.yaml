@@ -17,8 +17,8 @@ system_prompts:
     Note: the birthday may not be mandatory to the function.
     Note: convert every date to the format YYYY-MM-DD using numbers like: 2015-02-18
     You will receive an input in the form [CHILD INFO]:, [CONVERSATION]:.
-    If the info about the child like name and surname are missing then and only then use the function add_child_node, do not use it in any other case.
-    Use the function add activity only if the activity is different from the previous_activity in the child's info.
+    If the info about the child like last activity are missing then and only then use the function add_child_node, do not use it in any other case.
+    Use the function add activity only if the activity is different from the previous_activity in the child's info section.
     Return only the raw formatted text, do not put any other formatting like markdowns or quotes and do not make comments.
     If you do not find all the required informations for the function, put ''.
 
