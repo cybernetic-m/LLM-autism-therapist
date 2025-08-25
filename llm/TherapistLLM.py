@@ -38,6 +38,7 @@ class TherapistLLM:
         self.session_history = ''
         self.data = None
         self.model_name = model_name
+        self.last_gesture = ''
 
     def load_data(self, data):
         self.data = data
@@ -74,5 +75,8 @@ class TherapistLLM:
                                             system_prompt_template=self.system_prompt,
                                             user_prompt_template=formatted_user_prompt,
                                             temperature=1)
+
+        llm_response, self.last_gesture = llm_response.split('[GESTURE]:')
         self.session_history += '\n -Therapist: ' + llm_response
         return llm_response
+
