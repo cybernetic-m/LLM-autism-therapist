@@ -39,7 +39,7 @@ def main():
     server_url = "http://127.0.0.1:5000/send_data"
 
     # Run the Flask app in a separate thread to handle session sync
-    threading.Thread(target=lambda: robot_app.run(host='127.0.0.1', port=5002, debug=False, use_reloader=False)).start()
+    threading.Thread(target=lambda: robot_app.run(host='0.0.0.0', port=5003, debug=False, use_reloader=False)).start()
 
     # Initialize print count and exception count to print only the first time that we enter in the try or except
     # Each time that we enter in the try or except the other counter is reset to 0
@@ -80,6 +80,10 @@ def main():
                 print("An error occurred: " + str(e))
                 print_exc_count += 1
             print_try_count = 0 # reset the print count to print the listening message again
+        
+        except KeyboardInterrupt:
+            print("Robot Client is stopping...")
+            exit()
 
 if __name__ == "__main__":
     main()

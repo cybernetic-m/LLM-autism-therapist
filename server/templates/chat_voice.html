@@ -220,7 +220,7 @@
   }
 
   async function sendChatIdToRobot(chat_id) {
-  const robotUrl = "http://127.0.0.1:5000/start_session"; // Robot Client endpoint for receiving chat_id
+  const robotUrl = "http://172.17.0.1:5003/start_session"; // Robot Client endpoint for receiving chat_id
 
   try {
     const response = await fetch(robotUrl, {
