@@ -286,13 +286,18 @@ def chat_audio():
 
 @app.route('/send_data', methods=['GET'])
 def send_data():
-    chat_id = session.get("chat_id")
-    therapist = active_chats.get(chat_id) # retrieves the therapist of this session
+    try:
+        chat_id = session.get("chat_id")
+        therapist = active_chats.get(chat_id) # retrieves the therapist of this session
 
-    sentence = therapist.last_response
-    gesture = therapist.last_gesture
-    t = last_response_audio_length
-    return jsonify({"sentence": sentence, "gesture": gesture, "t": t})
+        sentence = therapist.last_response
+        gesture = therapist.last_gesture
+        t = last_response_audio_length
+        print(f"Sending to robot: sentence={sentence}, gesture={gesture}, t={t}")
+        return jsonify({"sentence": sentence, "gesture": gesture, "t": t})
+    except Exception as e:
+        print(f"Error in send_data: {e}")
+        return jsonify({"sentence": '', "gesture": '', "t": 0})
 
 if __name__ == '__main__':
     app.run(debug=True)
