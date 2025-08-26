@@ -27,7 +27,8 @@ def main():
             # Get the data from the server
             response = requests.get(server_url)
             if response.status_code == 200: # Check if the request was successful
-                data = response.json() # Get the json data from the response
+                data = response.json() # Get the json data from the response 
+                print("Data received from server: ", data)
                 
                 # Extract the sentence, gesture and time from the data
                 sentence = data.get("sentence", "") # sentence is the text that the robot will say (default is empty)
@@ -40,7 +41,7 @@ def main():
             time.sleep(1)
  
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print("An error occurred: " + str(e))
 
 if __name__ == "__main__":
     main()
