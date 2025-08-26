@@ -51,7 +51,7 @@ stop_event = threading.Event()
 # Create a queue for the results of the thread execution
 q = queue.Queue()
 # Create the face thread
-thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+#thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
 
 kg = KnowledgeGraph()
@@ -176,8 +176,6 @@ def submit():
 
     return render_template('chat_voice.html', child=data) # MODE = MODALITY REMOVED CHECK IF ERRORS
 
-
-
 def get_therapist_response(chat_id = None, child_message = None):
     therapist = active_chats.get(chat_id) # retrieves the therapist of this session
 
@@ -200,7 +198,7 @@ def chat_start():
     chat_id = session.get("chat_id")
     message, audio_path, duration = get_therapist_response(chat_id)
 
-    thread_face.start()
+    #thread_face.start()
     return jsonify({"robot": message, "robot_audio": f"{audio_path}"})
 
 
@@ -226,7 +224,7 @@ def chat_exit():
 
     # Stop the face thread at the end of the conversation
     stop_event.set()
-    thread_face.join()
+    #thread_face.join()
     try:
         score = q.get_nowait()
     except Exception:
@@ -288,7 +286,9 @@ def chat_audio():
 
 @app.route('/send_data', methods=['GET'])
 def send_data():
-    # Example data as a tuple
+    chat_id = session.get("chat_id")
+    therapist = active_chats.get(chat_id) # retrieves the therapist of this session
+
     sentence = therapist.last_response
     gesture = therapist.last_gesture
     t = last_response_audio_length
