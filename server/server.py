@@ -81,9 +81,10 @@ def get_audio_response(robot_text, chat_id):
 
     audio = AudioSegment.from_file(file_path)
     duration_seconds = round(len(audio) / 1000, 2)
+    print(f"Audio duration: {duration_seconds} seconds")
 
     # salva nella sessione
-    session['last_response_audio_length'] = duration_seconds
+    last_response_audio_length = duration_seconds
 
     return f"/static/{file_name}", duration_seconds
 
@@ -282,17 +283,13 @@ def chat_audio():
 
 @app.route('/send_data', methods=['GET'])
 def send_data():
-    print("send_data called")
     try:
-        chat_id = request.args.get("chat_id")  # The Robot Client passes chat_id as a query parameter
-        if not chat_id:
-            raise ValueError("chat_id is required")
         therapist = active_chats.get(chat_id)  # Use chat_id to retrieve the session's therapist
         if not therapist:
             raise ValueError(f"No active chat session found for chat_id: {chat_id}")
         sentence = therapist.last_response
         gesture = therapist.last_gesture
-        t = session.get('last_response_audio_length', 0)
+        t = last_response_audio_length
         print(f"Sending to robot: sentence={sentence}, gesture={gesture}, t={t}")
         return jsonify({"sentence": sentence, "gesture": gesture, "t": t})
     except Exception as e:

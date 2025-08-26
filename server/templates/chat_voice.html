@@ -219,37 +219,12 @@
     currentAudio.play();
   }
 
-  async function sendChatIdToRobot(chat_id) {
-  const robotUrl = "http://172.17.0.1:5003/start_session"; // Robot Client endpoint for receiving chat_id
-
-  try {
-    const response = await fetch(robotUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chat_id })
-    });
-
-    if (response.ok) {
-      console.log("Chat ID successfully sent to Robot Client.");
-    } else {
-      console.error("Failed to send Chat ID to Robot Client.");
-    }
-  } catch (error) {
-    console.error("Error in notifying Robot Client:", error);
-  }
-}
-
+  
   // Primo messaggio del robot
   window.onload = async function() {
     showTyping()
     const response = await fetch("/chat/start");
     const data = await response.json();
-
-    // Save the chat_id globally
-    chat_id = data.chat_id; 
-    console.log("Chat ID from server: ", chat_id);
-    // Send first message automatically to the Robot Client
-    sendChatIdToRobot(chat_id);
 
     addMessage(data.robot, "robot");
     if (data.robot_audio) playRobotAudio(data.robot_audio);
