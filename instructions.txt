@@ -38,3 +38,4 @@ python llm/LLM_main.py 2>/dev/null
 To install in the docker:
 
 pip install requests
+pip install flask

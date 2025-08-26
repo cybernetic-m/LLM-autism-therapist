@@ -65,29 +65,26 @@ unknown_child = {
     "child_dislikes": "",
     "previous_activity": "",
 }
-therapist = TherapistLLM(model_name=therapist_model)
 db_llm = DatabaseLLM(api_key=groq_api_key, model_name=db_model)
 FORM_LINK = 'https://forms.gle/dZcZWoxQqcNBP9zE8'
 last_response_audio_length = 0
 
+
 def get_audio_response(robot_text, chat_id):
-    """Generate unique audio file with gTTS to avoid cache issues."""
     cleanup_all_audio()
     unique_id = uuid.uuid4().hex
-
-    # File system path (per salvare il file)
     file_name = f"audio_{chat_id}_{unique_id}.mp3"
     file_path = os.path.join(app.root_path, "static", file_name)
-    print(f"Saving audio to {file_path}")
 
     tts = gTTS(robot_text, lang="it")
     tts.save(file_path)
 
     audio = AudioSegment.from_file(file_path)
-    duration_seconds = round(len(audio) / 1000, 2)  # 2 decimali
+    duration_seconds = round(len(audio) / 1000, 2)
 
-    # Web path (per farlo leggere dal browser)
-    last_response_audio_length = duration_seconds
+    # salva nella sessione
+    session['last_response_audio_length'] = duration_seconds
+
     return f"/static/{file_name}", duration_seconds
 
 
@@ -180,7 +177,7 @@ def get_therapist_response(chat_id = None, child_message = None):
     therapist = active_chats.get(chat_id) # retrieves the therapist of this session
 
     if not therapist:
-        return jsonify({"error": "Session not found"}), 400
+        print("error: Session not found")
 
     if child_message:
         therapist.add_child_response(child_message)
@@ -199,7 +196,7 @@ def chat_start():
     message, audio_path, duration = get_therapist_response(chat_id)
 
     #thread_face.start()
-    return jsonify({"robot": message, "robot_audio": f"{audio_path}"})
+    return jsonify({"robot": message, "robot_audio": f"{audio_path}", "chat_id": chat_id})
 
 
 # Handle text messages from the child
@@ -283,21 +280,23 @@ def chat_audio():
         "robot_audio": robot_audio_url
     })
 
-
 @app.route('/send_data', methods=['GET'])
 def send_data():
     try:
-        chat_id = session.get("chat_id")
-        therapist = active_chats.get(chat_id) # retrieves the therapist of this session
-
+        chat_id = request.args.get("chat_id")  # The Robot Client passes chat_id as a query parameter
+        if not chat_id:
+            raise ValueError("chat_id is required")
+        therapist = active_chats.get(chat_id)  # Use chat_id to retrieve the session's therapist
+        if not therapist:
+            raise ValueError(f"No active chat session found for chat_id: {chat_id}")
         sentence = therapist.last_response
         gesture = therapist.last_gesture
-        t = last_response_audio_length
+        t = session.get('last_response_audio_length', 0)
         print(f"Sending to robot: sentence={sentence}, gesture={gesture}, t={t}")
         return jsonify({"sentence": sentence, "gesture": gesture, "t": t})
     except Exception as e:
         print(f"Error in send_data: {e}")
-        return jsonify({"sentence": '', "gesture": '', "t": 0})
+        return jsonify({"sentence": "", "gesture": "", "t": 0})
 
 if __name__ == '__main__':
     app.run(debug=True)
