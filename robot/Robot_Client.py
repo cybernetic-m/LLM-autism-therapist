@@ -22,8 +22,14 @@ def main():
     # Create the server url
     server_url = "http://127.0.0.1:5000/send_data"
 
+    print_count = 0
     while True:
         try:
+            # Print only the first time
+            if print_count == 0:
+                print("Robot Client is listening on the server ", server_url)
+                print_count += 1
+
             # Get the data from the server
             response = requests.get(server_url)
             if response.status_code == 200: # Check if the request was successful
@@ -42,6 +48,7 @@ def main():
  
         except Exception as e:
             print("An error occurred: " + str(e))
+            print_count = 0 # reset the print count to print the listening message again
 
 if __name__ == "__main__":
     main()
