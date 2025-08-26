@@ -39,6 +39,7 @@ class TherapistLLM:
         self.data = None
         self.model_name = model_name
         self.last_gesture = ''
+        self.last_response = ''
 
     def load_data(self, data):
         self.data = data
@@ -78,5 +79,6 @@ class TherapistLLM:
 
         llm_response, self.last_gesture = llm_response.split('[GESTURE]:')
         self.session_history += '\n -Therapist: ' + llm_response
+        self.last_response = llm_response
         return llm_response
 

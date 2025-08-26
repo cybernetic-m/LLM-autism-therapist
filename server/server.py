@@ -4,7 +4,7 @@ import threading
 import queue
 import uuid
 import glob
-
+from pydub import AudioSegment
 from flask import Flask, request, render_template, jsonify, redirect, url_for, session
 
 
@@ -68,6 +68,7 @@ unknown_child = {
 therapist = TherapistLLM(model_name=therapist_model)
 db_llm = DatabaseLLM(api_key=groq_api_key, model_name=db_model)
 FORM_LINK = 'https://forms.gle/dZcZWoxQqcNBP9zE8'
+last_response_audio_length = 0
 
 def get_audio_response(robot_text, chat_id):
     """Generate unique audio file with gTTS to avoid cache issues."""
@@ -82,8 +83,12 @@ def get_audio_response(robot_text, chat_id):
     tts = gTTS(robot_text, lang="it")
     tts.save(file_path)
 
+    audio = AudioSegment.from_file(file_path)
+    duration_seconds = round(len(audio) / 1000, 2)  # 2 decimali
+
     # Web path (per farlo leggere dal browser)
-    return f"/static/{file_name}"
+    last_response_audio_length = duration_seconds
+    return f"/static/{file_name}", duration_seconds
 
 
 def cleanup_all_audio():
@@ -172,40 +177,44 @@ def submit():
     return render_template('chat_voice.html', child=data) # MODE = MODALITY REMOVED CHECK IF ERRORS
 
 
-# Start the chat → therapist speaks first
-@app.route("/chat/start")
-def chat_start():
-    chat_id = session.get("chat_id")
+
+def get_therapist_response(chat_id = None, child_message = None):
     therapist = active_chats.get(chat_id) # retrieves the therapist of this session
 
     if not therapist:
         return jsonify({"error": "Session not found"}), 400
 
-    first_message = therapist.speak()
+    if child_message:
+        therapist.add_child_response(child_message)
+
+    robot_response = therapist.speak()
     # makes the mp3 audio and returns the path for javascript
-    audio_path = get_audio_response(first_message, chat_id)
+    audio_path, duration = get_audio_response(robot_response, chat_id)
+
+    return robot_response, audio_path, duration
+
+
+# Start the chat → therapist speaks first
+@app.route("/chat/start")
+def chat_start():
+    chat_id = session.get("chat_id")
+    message, audio_path, duration = get_therapist_response(chat_id)
 
     thread_face.start()
-    return jsonify({"robot": first_message, "robot_audio": f"{audio_path}"})
+    return jsonify({"robot": message, "robot_audio": f"{audio_path}"})
 
 
 # Handle text messages from the child
 @app.route("/chat/send_message", methods=["POST"])
 def chat_message():
     chat_id = session.get("chat_id")
-    # retrieve therapist of this ession
-    therapist = active_chats.get(chat_id)
-
-    if not therapist:
-        return jsonify({"error": "Session not found"}), 400
 
     data = request.get_json()
     response = data.get("message") # get the message sent
 
-    therapist.add_child_response(response)
-    robot_text = therapist.speak()
-    audio_path = get_audio_response(robot_text, chat_id) # makes the mp3 audio and returns path for js
-    return jsonify({"child": response, "robot": robot_text, "robot_audio": f"{audio_path}"})
+    robot_response, audio_path, duration = get_therapist_response(chat_id, response)
+
+    return jsonify({"child": response, "robot": robot_response, "robot_audio": f"{audio_path}"})
 
 
 # Handle chat exit and save data to DB
@@ -251,7 +260,7 @@ def chat_exit():
 def chat_audio():
     audio_file = request.files["audio"]  # get the audio from browser
 
-    # Path assoluto in maniera cross-platform
+    # Path
     audio_path = os.path.join(app.root_path, "static", f"user_audio_{session['chat_id']}.wav")
     audio_file.save(audio_path)  # save it
 
@@ -264,27 +273,26 @@ def chat_audio():
 
     # retrieve therapist
     chat_id = session.get("chat_id")
-    therapist_instance = active_chats.get(chat_id)
-    if therapist_instance is None:
-        return jsonify({"error": "Therapist not found"}), 400
+    robot_response, audio_path, duration = get_therapist_response(chat_id, response_text)
 
-    # add child response to therapist
-    therapist_instance.add_child_response(response_text)
-    app.logger.info(f"therapist -> {therapist_instance.data}")
-
-    robot_text = therapist_instance.speak()
-
-    # anche qui: costruisci il path con join
-    robot_audio_path = get_audio_response(robot_text, chat_id)
 
     # ma al client conviene dare il path relativo (così il browser può scaricarlo da /static)
-    robot_audio_url = f"/static/{os.path.basename(robot_audio_path)}"
+    robot_audio_url = f"/static/{os.path.basename(audio_path)}"
 
     return jsonify({
         "child": response_text,
-        "robot": robot_text,
+        "robot": robot_response,
         "robot_audio": robot_audio_url
     })
+
+
+@app.route('/send_data', methods=['GET'])
+def send_data():
+    # Example data as a tuple
+    sentence = therapist.last_response
+    gesture = therapist.last_gesture
+    t = last_response_audio_length
+    return jsonify({"sentence": sentence, "gesture": gesture, "t": t})
 
 if __name__ == '__main__':
     app.run(debug=True)
