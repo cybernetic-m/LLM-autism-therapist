@@ -52,6 +52,9 @@ q = queue.Queue()
 # Create the face thread
 thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
+# flag for the robot client
+active_chats['llm_updated'] = True
+
 chat_id = "test"
 
 kg = KnowledgeGraph()
@@ -84,7 +87,7 @@ def get_audio_response(robot_text, chat_id):
     print(f"Audio duration: {duration_seconds} seconds")
 
     # salva nella sessione
-    last_response_audio_length = duration_seconds
+    active_chats[chat_id].last_response_audio_length = duration_seconds
 
     return f"/static/{file_name}", duration_seconds
 
@@ -187,6 +190,8 @@ def get_therapist_response(chat_id = None, child_message = None):
     # makes the mp3 audio and returns the path for javascript
     audio_path, duration = get_audio_response(robot_response, chat_id)
 
+    active_chats['llm_updated'] = True # now we can get the new llm response in the robot client
+
     return robot_response, audio_path, duration
 
 
@@ -283,14 +288,19 @@ def chat_audio():
 
 @app.route('/send_data', methods=['GET'])
 def send_data():
+    # if the llm has already given the text response and it was not changed since then
+    if not active_chats['llm_updated']:
+        return jsonify({"sentence": "", "gesture": "", "t": 0})
+
     try:
         therapist = active_chats.get(chat_id)  # Use chat_id to retrieve the session's therapist
         if not therapist:
             raise ValueError(f"No active chat session found for chat_id: {chat_id}")
         sentence = therapist.last_response
         gesture = therapist.last_gesture
-        t = last_response_audio_length
+        t = active_chats[chat_id].last_response_audio_length
         print(f"Sending to robot: sentence={sentence}, gesture={gesture}, t={t}")
+        active_chats['llm_updated'] = False
         return jsonify({"sentence": sentence, "gesture": gesture, "t": t})
     except Exception as e:
         print(f"Error in send_data: {e}")
