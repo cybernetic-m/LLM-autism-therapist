@@ -33,8 +33,8 @@ class KnowledgeGraph:
         for elem in self.activities:
             self.run_query(f'MERGE (a:Activity {{name: "{elem}"}})')
 
-    def get_last_activity(self, name=None, surname=None, birth_date=None):
-        query = """
+    def get_last_activity(self, name=None, surname=None, birth_date=None, limit = 3):
+        query = f"""
         MATCH (c:Child)-[r]->(ad:ActivityDetail)
         WHERE ($name IS NULL OR c.Name = $name)
           AND ($surname IS NULL OR c.Surname = $surname)
@@ -44,7 +44,7 @@ class KnowledgeGraph:
                ad.Genre AS activity_genre,
                ad.Summary AS activity_summary
         ORDER BY r.date DESC
-        LIMIT 1
+        LIMIT {limit}
         """
         params = {
             "name": name,
@@ -53,7 +53,7 @@ class KnowledgeGraph:
         }
 
         results = self.run_query(query, params or {})
-        return {"last_activity": results[0]} if results else None
+        return {"last_activity": results} if results else None
 
     def get_child(self, name=None, surname=None, birth_date=None):
         if not name and not surname and not birth_date:
@@ -361,4 +361,5 @@ def kg_test():
 if __name__ == "__main__":
 
     kg = KnowledgeGraph()
+    print(kg.get_child(name="Massimo", surname = "Romano"))
     kg.erase_graph()
