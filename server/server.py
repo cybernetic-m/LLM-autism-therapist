@@ -51,7 +51,7 @@ stop_event = threading.Event()
 # Create a queue for the results of the thread execution
 q = queue.Queue()
 # Create the face thread
-#thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
 
 kg = KnowledgeGraph()
@@ -185,7 +185,7 @@ def chat_start():
     # makes the mp3 audio and returns the path for javascript
     audio_path = get_audio_response(first_message, chat_id)
 
-    #thread_face.start()
+    thread_face.start()
     return jsonify({"robot": first_message, "robot_audio": f"{audio_path}"})
 
 
@@ -217,7 +217,7 @@ def chat_exit():
 
     # Stop the face thread at the end of the conversation
     stop_event.set()
-    #thread_face.join()
+    thread_face.join()
     try:
         score = q.get_nowait()
     except Exception:
@@ -245,12 +245,15 @@ def chat_exit():
     return jsonify({"link": FORM_LINK})
 
 
+
 # Handle audio messages from the child
 @app.route("/chat/send_audio", methods=["POST"])
 def chat_audio():
-    audio_file = request.files["audio"] # get the audio from browser
-    audio_path = f"static/user_audio_{session['chat_id']}.wav"
-    audio_file.save(audio_path) # save it
+    audio_file = request.files["audio"]  # get the audio from browser
+
+    # Path assoluto in maniera cross-platform
+    audio_path = os.path.join(app.root_path, "static", f"user_audio_{session['chat_id']}.wav")
+    audio_file.save(audio_path)  # save it
 
     # Transcribe with Whisper/Groq API
     response_text = audio_groq_api(
@@ -270,8 +273,18 @@ def chat_audio():
     app.logger.info(f"therapist -> {therapist_instance.data}")
 
     robot_text = therapist_instance.speak()
-    audio_path = get_audio_response(robot_text, chat_id) # make audio and return path
-    return jsonify({"child": response_text, "robot": robot_text, "robot_audio": f"{audio_path}"})
+
+    # anche qui: costruisci il path con join
+    robot_audio_path = get_audio_response(robot_text, chat_id)
+
+    # ma al client conviene dare il path relativo (così il browser può scaricarlo da /static)
+    robot_audio_url = f"/static/{os.path.basename(robot_audio_path)}"
+
+    return jsonify({
+        "child": response_text,
+        "robot": robot_text,
+        "robot_audio": robot_audio_url
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
