@@ -63,7 +63,8 @@ class Robot:
         
         # k_pause is a constant =  N/t where N is the number of ' ' spaces in a time interval
         # I have experimentally computed it putting 25 spaces and observing 7 s of time displaying the sentence in Choreographe
-        k_pause = 3.5
+        #k_pause = 3.5
+        k_pause = 3
         n_spaces = int(k_pause * t) # number of spaces needed to wait t time for my sentence
         pause = " " * n_spaces  # effectively the string '     ' 
 
@@ -166,7 +167,7 @@ class Robot:
         
         # Loop until the say method is finished (time t)
         # I check if the time t is finished to stop the motion, really I use 75% of the time t to be sure that the motion is finished before the say method
-        while (time.time() - time_ref) < t*0.75:
+        while (time.time() - time_ref) < t*0.85:
             self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
             self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)      
         
@@ -196,7 +197,7 @@ class Robot:
         
         # Loop until the say method is finished (time t)
         # I check if the time t is finished to stop the motion, really I use 75% of the time t to be sure that the motion is finished before the say method
-        while (time.time() - time_ref) < t*0.75:
+        while (time.time() - time_ref) < t*0.85:
             self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
             self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)      
         
@@ -279,7 +280,7 @@ class Robot:
         
         # Loop until the say method is finished (time t)
         # I check if the time t is finished to stop the motion, really I use 75% of the time t to be sure that the motion is finished before the say method
-        while (time.time() - time_ref) < t*0.75:
+        while (time.time() - time_ref) < t*0.85:
             self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
         
         # Returning to starting state
@@ -307,14 +308,14 @@ class Robot:
         
         # Loop until the say method is finished (time t)
         # I check if the time t is finished to stop the motion, really I use 75% of the time t to be sure that the motion is finished before the say method
-        while (time.time() - time_ref) < t*0.75:
+        while (time.time() - time_ref) < t*0.85:
             self.motion_service.angleInterpolation(self.joint_names, angles_t1, times, self.isAbsolute)
             self.motion_service.angleInterpolation(self.joint_names, angles_t2, times, self.isAbsolute)
         
         # Returning to starting state
         self.motion_service.angleInterpolation(self.joint_names, angles_start, times, self.isAbsolute)
 
-    def speak_and_move(self, sentence, type_of_motion, t):
+    def speak_and_move(self, sentence, type_of_motion, t=5):
 
         '''
         This method make the robot moving and speaking at the same time, using threads.
@@ -322,7 +323,7 @@ class Robot:
         and one thread for moving the robot that enable the code to make run both the say and the motion at the same time in parallel.
         The motion thread is created only if the type_of_motion passed as argument is in the list of admitted gestures self.admitted_gestures,
         otherwise the robot only speaks.
-        
+
         Args:
             - sentence (str): the sentence to say
             - type_of_motion (str): the type of motion that the robot has to do, it must be in the list self.admitted_gestures

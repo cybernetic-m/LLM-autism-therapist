@@ -48,9 +48,9 @@ def main():
                 # Extract the sentence, gesture and time from the data
                 sentence = data.get("sentence", "") # sentence is the text that the robot will say (default is empty)
                 gesture = data.get("gesture", "")   # gesture is the gesture that the robot will do (default is empty)
-                t = data.get("time", 5)   # time is the time that the robot will take to say the sentence and do the gesture (default is 5 seconds)
+                t = data.get("t")   # time is the time that the robot will take to say the sentence and do the gesture (default is 5 seconds)
 
-                robot.speak_and_move(sentence, gesture, t)
+                robot.speak_and_move(sentence=sentence, type_of_motion=gesture, t=t)
          
 
             # Wait for a short period before checking again
