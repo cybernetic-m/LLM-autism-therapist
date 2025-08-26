@@ -22,13 +22,19 @@ def main():
     # Create the server url
     server_url = "http://127.0.0.1:5000/send_data"
 
-    print_count = 0
+    # Initialize print count and exception count to print only the first time that we enter in the try or except
+    # Each time that we enter in the try or except the other counter is reset to 0
+    print_try_count = 0
+    print_exc_count = 0
+
     while True:
-        try:
+        try:   
+            print_exc_count = 0 # reset the exception print count to print the exception message again
+
             # Print only the first time
-            if print_count == 0:
+            if print_try_count == 0:
                 print("Robot Client is listening on the server ", server_url)
-                print_count += 1
+                print_try_count += 1
 
             # Get the data from the server
             response = requests.get(server_url)
@@ -47,8 +53,10 @@ def main():
             time.sleep(1)
  
         except Exception as e:
-            print("An error occurred: " + str(e))
-            print_count = 0 # reset the print count to print the listening message again
+            if print_exc_count == 0:
+                print("An error occurred: " + str(e))
+                print_exc_count += 1
+            print_try_count = 0 # reset the print count to print the listening message again
 
 if __name__ == "__main__":
     main()
