@@ -7,7 +7,6 @@ import glob
 from pydub import AudioSegment
 from flask import Flask, request, render_template, jsonify, redirect, url_for, session
 
-
 sys.path.insert(0, './audio')
 sys.path.insert(0, './neo4j_db')
 sys.path.insert(0, './llm')
@@ -51,8 +50,9 @@ stop_event = threading.Event()
 # Create a queue for the results of the thread execution
 q = queue.Queue()
 # Create the face thread
-#thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
 
+chat_id = "test"
 
 kg = KnowledgeGraph()
 unknown_child = {
@@ -162,7 +162,7 @@ def submit():
 
     # Save child info and chat session
     session["child_data"] = data
-    session["chat_id"] = str(uuid.uuid4())
+    session["chat_id"] = chat_id #str(uuid.uuid4())
     therapist = TherapistLLM(model_name=therapist_model)
     therapist.load_data(data)
 
@@ -282,6 +282,7 @@ def chat_audio():
 
 @app.route('/send_data', methods=['GET'])
 def send_data():
+    print("send_data called")
     try:
         chat_id = request.args.get("chat_id")  # The Robot Client passes chat_id as a query parameter
         if not chat_id:
