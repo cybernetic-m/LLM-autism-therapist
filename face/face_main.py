@@ -1,10 +1,18 @@
 import cv2
 import mediapipe as mp
-from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score
+from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score, get_screen_resolution
 import time
 import os
 
 def face_thread(q, stop_event):
+
+    # Get the screen resolution
+    screen_width, screen_height = get_screen_resolution()
+    # Create a named window and move it to the top-right corner of the screen
+    window_name = "Engagement Estimation"
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.moveWindow(window_name, screen_width-50, 0) # Move the window to the top-right corner
+    cv2.resizeWindow(window_name, 640, 440) # Resize the window to 640x460
 
     # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
     counter_frames = 0
@@ -125,9 +133,9 @@ def face_thread(q, stop_event):
                         cv2.putText(frame,str(s) + ' '+ gaze+' '+ detected_emotion, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 2553, 0), 2)
 
                         # Show the output image
-                        cv2.imshow("Gaze Estimation", frame)
+                        cv2.imshow(window_name, frame)
                         current_time = time.time()
-                        if current_time - last_save_time  >= 1.0:
+                        if current_time - last_save_time  >= 3.0:
                             filename = f"frames/frame_{counter_frames}.jpg"
                             cv2.imwrite(filename, frame)
                             last_save_time = current_time

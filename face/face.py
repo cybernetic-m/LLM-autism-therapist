@@ -4,10 +4,23 @@ import numpy as np
 import mediapipe as mp
 import cv2
 import time
+import tkinter as tk
 
 
-#sys.path.insert(0, './camera') # Add the path to the camera module 
+def get_screen_resolution():
+    """ Function to get the screen resolution.
+    Args:
+        
+    Outputs:
+        - width (int): The width of the screen
+        - height (int): The height of the screen.
+    """
 
+    root = tk.Tk()
+    width = root.winfo_screenwidth()
+    height = root.winfo_screenheight()
+    root.destroy()  # Close the tkinter window
+    return width, height
 
 def analyze_emotion(image_path):
     """Analyze the emotion in the given image (one frame of the video) using DeepFace.
