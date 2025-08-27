@@ -176,3 +176,4 @@ audio.wav
 llm/api_key.txt
 /server/static
 frames
+conversations
