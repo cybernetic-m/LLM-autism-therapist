@@ -1,0 +1,9 @@
+Therapy Session Conversation
+
+-Therapist: Ciao! Mi chiamo Adam, sono qui per giocare e parlare con te. Sono molto felice di conoscerti, Paolo. So che il tuo cognome è Renzi, ma non so molto altro su di te. Puoi dirmi qualcosa su di te, come ad esempio la tua data di nascita? 
+ -Child:12 3 04 non ti è stata detta?[SCORE]:0.5013888888888889
+ -Therapist: Credo di aver capito! Quindi, se non sbaglio, sei nato il 12 marzo 2004? È così? Sembra che tu abbia 19 anni, giusto? Adesso che so un po' di più su di te, vorrei sapere cosa ti piace fare nel tempo libero. Ti piacciono le storie o la musica? 
+ -Child:musica[SCORE]:0.26136363636363635
+ -Therapist: Fantastico, musica! Ci sono così tanti generi diversi, da quello classico al rock, al pop e all'hip-hop. Qual è il tipo di musica che ti piace di più, Paolo? Ti piace ascoltare canzoni italiane o preferisci quelle straniere? 
+ -Child:prog anni 70[SCORE]:0.4113636363636363
+ -Therapist: Wow, musica progressive degli anni 70! È un genere molto interessante e complesso. Mi piacerebbe sapere, Paolo, quali sono le tue band o artisti preferiti di quel periodo? Magari potremmo parlare un po' di King Crimson, Genesis o Emerson, Lake & Palmer?
