@@ -45,5 +45,5 @@ class GestureLLM:
                                             system_prompt_template=self.system_prompt,
                                             user_prompt_template=prompt,
                                             temperature=0)
-        return llm_response.split("[GESTURE]: ")
+        return llm_response.split("[GESTURE]: ")[1]
 

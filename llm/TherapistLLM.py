@@ -111,3 +111,26 @@ class TherapistLLM:
 
         return file_path_conversation
 
+if __name__ == '__main__':
+    unknown_child = {
+        "child_name": "",
+        "child_surname": "",
+        "child_birth": "",
+        "child_gender": "",
+        "child_nation": "",
+        "child_likes": "",
+        "child_dislikes": "",
+        "previous_activity": "",
+    }
+    therapist_model = 'llama-3.3-70b-versatile'
+    therapist = TherapistLLM(model_name=therapist_model)
+    therapist.load_data(unknown_child)
+
+    print(therapist.speak())
+    print(therapist.last_gesture)
+    therapist.add_child_response("Ciao, mi chiamo Antonio Giammarco, ho 12 anni e mi piacciono le macchine")
+    print(therapist.speak())
+    print(therapist.last_gesture)
+    therapist.add_child_response("Pensa a un numero da 1 a 100")
+    print(therapist.speak())
+    print(therapist.last_gesture)
