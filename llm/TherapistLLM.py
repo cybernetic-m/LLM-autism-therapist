@@ -112,7 +112,7 @@ class TherapistLLM:
             return age
 
         def add_child_response(self, response):
-            self.session_history += '\n -Child:' + response
+            self.session_history += '\n -Child:' + response + " [PREVIOUS_GESTURE]: " + self.last_gesture
 
         def speak(self):
             formatted_user_prompt = self.user_prompt.format(
