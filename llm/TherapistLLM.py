@@ -10,6 +10,7 @@ import os
 # Check the operating system, it is used for the import modules
 if os.name == 'nt':  # 'nt' stands for Windows
     from llm.llm_api import call_translation_api
+    from llm.GestureLLM import GestureLLM
 
     script_dir = os.path.dirname(__file__)
     file_path = os.path.join(script_dir, "api_key.txt")
@@ -20,6 +21,7 @@ if os.name == 'nt':  # 'nt' stands for Windows
 
 elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from llm_api import call_translation_api
+    from GestureLLM import GestureLLM
     with open("llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
     with open("config/llm_config.yaml", "r", encoding="utf-8") as f:
@@ -42,6 +44,7 @@ class TherapistLLM:
         self.model_name = model_name
         self.last_gesture = ''
         self.last_response = ''
+        self.gesture_llm = GestureLLM(model_name='gemma2-9b-it')
 
     def load_data(self, data):
         self.data = data
@@ -79,9 +82,9 @@ class TherapistLLM:
                                             user_prompt_template=formatted_user_prompt,
                                             temperature=1)
 
-        llm_response, self.last_gesture = llm_response.split('[GESTURE]: ')
         self.session_history += '\n -Therapist: ' + llm_response
         self.last_response = llm_response
+        self.last_gesture = self.gesture_llm.get_gesture(llm_response) # get the gesture from the response
         return llm_response
 
     def export_conversation(self, path='conversations'):
@@ -108,4 +111,3 @@ class TherapistLLM:
 
         return file_path_conversation
 
- 
