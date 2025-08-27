@@ -260,6 +260,8 @@ def chat_exit():
             f"[CONVERSATION]: {therapist.session_history}"
         )
 
+        therapist.export_conversation()
+
         app.logger.info(f"exit from chat -> {data_db_llm}")
         # save the info in the db
         db_llm.save_info(conversation=data_db_llm, verbose=True, score=score)
