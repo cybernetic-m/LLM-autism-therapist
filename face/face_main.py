@@ -127,7 +127,7 @@ def face_thread(q, stop_event):
                         # Show the output image
                         cv2.imshow("Gaze Estimation", frame)
                         current_time = time.time()
-                        if last_save_time - current_time >= 1.0:
+                        if current_time - last_save_time  >= 1.0:
                             filename = f"frames/frame_{counter_frames}.jpg"
                             cv2.imwrite(filename, frame)
                             last_save_time = current_time
@@ -143,3 +143,16 @@ def face_thread(q, stop_event):
     camera.release()
     s = sum(s_list) / len(s_list) if s_list else 0
     q.put(s)
+    
+
+if __name__ == "__main__":
+    import threading
+    import queue
+    
+    stop_event = threading.Event()
+    # Create a queue for the results of the thread execution
+    q = queue.Queue()
+    # Create the face thread
+    thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+    
+    thread_face.start()
