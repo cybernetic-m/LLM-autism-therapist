@@ -184,15 +184,14 @@ def get_therapist_response(chat_id = None, child_message = None):
         print("error: Session not found")
 
     s_list = []
-    
     while not q.empty():
         s_list.append(q.get())
-        
-    if s_list:
+    if s_list and child_message:
         s = sum(s_list) / len(s_list)
-        child_message = child_message + "[SCORE]:" + s
-    else:
-        child_message = child_message + "[SCORE]:0.5"
+        s = round(s, 2)
+        child_message = child_message + " [SCORE]:" + str(s)
+    elif child_message:
+        child_message = child_message + " [SCORE]:0.5"
 
     if child_message:
         therapist.add_child_response(child_message)
@@ -212,7 +211,7 @@ def chat_start():
     chat_id = session.get("chat_id")
     message, audio_path, duration = get_therapist_response(chat_id)
 
-    #thread_face.start()
+    thread_face.start()
     return jsonify({"robot": message, "robot_audio": f"{audio_path}", "chat_id": chat_id})
 
 
