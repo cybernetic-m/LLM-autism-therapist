@@ -183,6 +183,17 @@ def get_therapist_response(chat_id = None, child_message = None):
     if not therapist:
         print("error: Session not found")
 
+    s_list = []
+    
+    while not q.empty():
+        s_list.append(q.get())
+        
+    if s_list:
+        s = sum(s_list) / len(s_list)
+        child_message = child_message + "[SCORE]:" + s
+    else:
+        child_message = child_message + "[SCORE]:0.5"
+
     if child_message:
         therapist.add_child_response(child_message)
 
@@ -227,9 +238,13 @@ def chat_exit():
 
     # Stop the face thread at the end of the conversation
     stop_event.set()
-    #thread_face.join()
+    thread_face.join()
     try:
-        score = q.get_nowait()
+        s_list = []
+    
+        while not q.empty():
+            s_list.append(q.get())
+        score = s_list[-1]
     except Exception:
         score = 0  # default se non c'è niente in coda
 

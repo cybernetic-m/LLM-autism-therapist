@@ -45,6 +45,7 @@ def face_thread(q, stop_event):
                 emotion = analyze_emotion(image_path)
                 s, detected_emotion = score(g/num_frames_emotion, emotion)
                 s_list.append(s)
+                q.put(s)
                 g = 0
 
             # Extract landmarks from the captured frame and extract gaze direction
