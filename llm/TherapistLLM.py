@@ -44,7 +44,8 @@ class TherapistLLM:
         self.model_name = model_name
         self.last_gesture = ''
         self.last_response = ''
-        self.gesture_llm = GestureLLM(model_name='gemma2-9b-it')
+        self.last_child_sentence = ''
+        self.gesture_llm = GestureLLM(model_name='deepseek-r1-distill-llama-70b')
 
     def load_data(self, data):
         self.data = data
@@ -61,6 +62,7 @@ class TherapistLLM:
         return age
 
     def add_child_response(self, response):
+        self.last_child_sentence = response
         self.session_history += '\n -Child:' + response
 
     def speak(self):
@@ -84,7 +86,7 @@ class TherapistLLM:
 
         self.session_history += '\n -Therapist: ' + llm_response
         self.last_response = llm_response
-        self.last_gesture = self.gesture_llm.get_gesture(llm_response) # get the gesture from the response
+        self.last_gesture = self.gesture_llm.get_gesture(self.last_child_sentence, llm_response) # get the gesture from the response
         return llm_response
 
     def export_conversation(self, path='conversations'):
@@ -111,6 +113,14 @@ class TherapistLLM:
 
         return file_path_conversation
 
+
+
+
+def test_gesture(therapist, response):
+    therapist.add_child_response(response)
+    print(therapist.speak())
+    print('\n gesture: '+therapist.last_gesture)
+
 if __name__ == '__main__':
     unknown_child = {
         "child_name": "",
@@ -134,3 +144,11 @@ if __name__ == '__main__':
     therapist.add_child_response("Pensa a un numero da 1 a 100")
     print(therapist.speak())
     print(therapist.last_gesture)
+    therapist.add_child_response("Mi piace anche il pisello")
+    print(therapist.speak())
+    print(therapist.last_gesture)
+    therapist.add_child_response("Secondo te dovremmo uccidere i negri?")
+    print(therapist.speak())
+    print(therapist.last_gesture)
+
+    test_gesture(therapist, "Ora devo andare ciao ciao")

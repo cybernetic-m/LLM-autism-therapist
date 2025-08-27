@@ -38,8 +38,8 @@ class GestureLLM:
         self.last_gesture = ''
         self.model_name = model_name
 
-    def get_gesture(self, therapist_response):
-        prompt = "[SENTENCE]: " + therapist_response + " [LAST GESTURE]: " + self.last_gesture
+    def get_gesture(self, child_sentence, therapist_response):
+        prompt = "[CHILD SENTENCE]:" + child_sentence + " [ROBOT SENTENCE]: " + therapist_response + " [LAST GESTURE]: " + self.last_gesture
         llm_response = call_translation_api(api_key=groq_api_key,
                                             model_name=self.model_name,
                                             system_prompt_template=self.system_prompt,
