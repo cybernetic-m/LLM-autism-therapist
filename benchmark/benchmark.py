@@ -1,10 +1,20 @@
+import sys
+sys.path.insert(0, './audio')
+sys.path.insert(0, './neo4j_db')
+sys.path.insert(0, './llm')
+sys.path.insert(0, './face')
+
 import cv2
 import mediapipe as mp
-from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score, get_screen_resolution
 import time
 import os
+from gtts import gTTS
 
-def face_thread(q, stop_event):
+from face_main import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score, get_screen_resolution
+from audio import record_audio
+from audio_api import audio_groq_api
+
+def attention_benchmark(q, stop_event):
 
     # Get the screen resolution
     screen_width, screen_height = get_screen_resolution()
@@ -17,6 +27,7 @@ def face_thread(q, stop_event):
     # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
     counter_frames = 0
     num_frames_emotion = 20
+    last_save_time = time.time()
 
     if not os.path.exists("./frames"):
         os.makedirs("./frames")
@@ -56,11 +67,7 @@ def face_thread(q, stop_event):
             if counter_frames % num_frames_emotion == 0:
                 emotion = analyze_emotion(image_path)
                 s, detected_emotion = score(g/num_frames_emotion, emotion)
-                s_list.append(s)
-                q.put(s)
                 g = 0
-
-            # Extract landmarks from the captured frame and extract gaze direction
 
             # Initialize the Face Mesh model
             mp_face_mesh = mp.solutions.face_mesh
@@ -131,6 +138,11 @@ def face_thread(q, stop_event):
 
                         # Show the output image
                         cv2.imshow(window_name, frame)
+                        current_time = time.time()
+                        if current_time - last_save_time  >= 3.0:
+                            filename = f"frames/frame_{counter_frames}.jpg"
+                            cv2.imwrite(filename, frame)
+                            last_save_time = current_time
                         
                 else:
                     pass
@@ -141,18 +153,27 @@ def face_thread(q, stop_event):
                 break
 
     camera.release()
-    s = sum(s_list) / len(s_list) if s_list else 0
-    q.put(s)
     
 
+def audio_benchmark():
+    path = "audio/"
+    record_audio(path)
+    response = audio_groq_api(api_key = groq_api_key, model_name = 'whisper-large-v3', audio_path = path)
+    tts = gTTS(response, lang="it")
+    tts.save(path)
+    
+    
 if __name__ == "__main__":
     import threading
     import queue
     
+    with open("llm/api_key.txt", "r") as file:
+        groq_api_key = file.read()
+        
     stop_event = threading.Event()
     # Create a queue for the results of the thread execution
     q = queue.Queue()
     # Create the face thread
-    thread_face = threading.Thread(target=face_thread, args=(q,stop_event))
+    thread_face = threading.Thread(target=attention_benchmark, args=(q,stop_event))
     
     thread_face.start()

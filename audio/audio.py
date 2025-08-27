@@ -3,7 +3,7 @@ import wave
 import numpy as np
 #import whisper
 
-def record_audio():
+def record_audio(filename = "audio.wav"):
     
 
     """ Record audio from the microphone and save it to a WAV file.
@@ -23,8 +23,6 @@ def record_audio():
     # Thresholds for silence detection
     threshold_silent_chunks = 100 # Number of silent chunks before stopping the recording
     threshold_volume = 100 # Volume threshold to consider the audio as silent
-
-    filename = "audio.wav" # Output file name
 
     # Open the audio stream
     stream = p.open(format=format_type, 
