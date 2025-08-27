@@ -1,14 +1,19 @@
 import cv2
 import mediapipe as mp
 from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score
-
+import time
+import os
 
 def face_thread(q, stop_event):
 
     # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
     counter_frames = 0
     num_frames_emotion = 20
+    last_save_time = time.time()
 
+    if not os.path.exists("./frames"):
+        os.makedirs("./frames")
+    
     # Open the default camera (usually the first camera)
     camera = cv2.VideoCapture(0)
 
@@ -121,6 +126,12 @@ def face_thread(q, stop_event):
 
                         # Show the output image
                         cv2.imshow("Gaze Estimation", frame)
+                        current_time = time.time()
+                        if last_save_time - current_time >= 1.0:
+                            filename = f"frames/frame_{counter_frames}.jpg"
+                            cv2.imwrite(filename, frame)
+                            last_save_time = current_time
+                        
                 else:
                     pass
                     #print("No landmarks detected.")
