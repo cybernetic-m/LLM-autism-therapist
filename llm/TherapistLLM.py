@@ -122,6 +122,7 @@ def test_gesture(therapist, response):
     print('\n gesture: '+therapist.last_gesture)
 
 if __name__ == '__main__':
+
     unknown_child = {
         "child_name": "",
         "child_surname": "",

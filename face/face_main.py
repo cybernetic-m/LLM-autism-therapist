@@ -1,6 +1,11 @@
 import cv2
 import mediapipe as mp
-from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score, get_screen_resolution
+import os
+if os.name == 'nt':  # 'nt' stands for Windows
+    from face.face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score, get_screen_resolution
+
+if os.name == 'posix':
+    from face import analyze_emotion, head_pose_estimator, irid_pose_estimator, gaze_estimator, score, get_screen_resolution
 import time
 import os
 

@@ -1,3 +1,5 @@
+
+
 import sys
 import os
 import threading
@@ -13,6 +15,7 @@ sys.path.insert(0, './llm')
 sys.path.insert(0, './face')
 app = Flask(__name__)
 
+
 # Check the operating system, it is used for the import modules
 if os.name == 'nt':  # 'nt' stands for Windows
     from neo4j_db.database import KnowledgeGraph
@@ -21,7 +24,9 @@ if os.name == 'nt':  # 'nt' stands for Windows
     from llm.TherapistLLM import TherapistLLM
     from llm.DatabaseLLM import DatabaseLLM
     from gtts import gTTS
-    #from face.face_main import face_thread
+
+
+    from face.face_main import face_thread
     with open("../llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
 
@@ -82,8 +87,8 @@ def get_audio_response(robot_text, chat_id):
     tts = gTTS(robot_text, lang="it")
     tts.save(file_path)
 
-    audio = AudioSegment.from_file(file_path)
-    duration_seconds = round(len(audio) / 1000, 2)
+    #audio = AudioSegment.from_file(file_path)
+    duration_seconds = 0 # round(len(audio) / 1000, 2)
     print(f"Audio duration: {duration_seconds} seconds")
 
     # salva nella sessione
