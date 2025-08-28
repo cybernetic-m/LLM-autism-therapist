@@ -177,3 +177,5 @@ llm/api_key.txt
 /server/static
 frames
 conversations
+benchmark/audio
+benchmark/frames

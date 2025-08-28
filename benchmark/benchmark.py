@@ -26,6 +26,7 @@ def attention_benchmark(q, stop_event):
 
     # Initialize the counter for frames. The emotion will be saved each "num_frames_emotion" frames.
     counter_frames = 0
+    counter_frames_ = 0
     num_frames_emotion = 20
     last_save_time = time.time()
 
@@ -138,10 +139,14 @@ def attention_benchmark(q, stop_event):
                         # Show the output image
                         cv2.imshow(window_name, frame)
                         current_time = time.time()
-                        if current_time - last_save_time  >= 3.0:
+                        if current_time - last_save_time  >= 1.0:
                             filename = f"./benchmark/frames/frame_{counter_frames}.jpg"
                             cv2.imwrite(filename, frame)
                             last_save_time = current_time
+                            counter_frames_ += 1
+                            if counter_frames_ >= 100:
+                                stop_event.set()
+                                break
                         
                 else:
                     pass
