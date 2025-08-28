@@ -29,8 +29,7 @@ def attention_benchmark(q, stop_event):
     num_frames_emotion = 20
     last_save_time = time.time()
 
-    if not os.path.exists("./frames"):
-        os.makedirs("./frames")
+    os.makedirs("./benchmark/frames", exist_ok=True)
     
     # Open the default camera (usually the first camera)
     camera = cv2.VideoCapture(0)
@@ -183,11 +182,11 @@ if __name__ == "__main__":
     with open("llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
     
-    if args.run_audio:
+    if args.audio:
         os.makedirs("./benchmark/audio/", exist_ok=True)
         audio_benchmark(args.audio_samples)
         
-    if args.run_attention:
+    if args.attention:
         stop_event = threading.Event()
         # Create a queue for the results of the thread execution
         q = queue.Queue()
