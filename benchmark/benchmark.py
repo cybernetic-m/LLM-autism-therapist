@@ -140,7 +140,7 @@ def attention_benchmark(q, stop_event):
                         cv2.imshow(window_name, frame)
                         current_time = time.time()
                         if current_time - last_save_time  >= 3.0:
-                            filename = f"frames/frame_{counter_frames}.jpg"
+                            filename = f"./benchmark/frames/frame_{counter_frames}.jpg"
                             cv2.imwrite(filename, frame)
                             last_save_time = current_time
                         
@@ -155,25 +155,43 @@ def attention_benchmark(q, stop_event):
     camera.release()
     
 
-def audio_benchmark():
-    path = "audio/"
-    record_audio(path)
-    response = audio_groq_api(api_key = groq_api_key, model_name = 'whisper-large-v3', audio_path = path)
-    tts = gTTS(response, lang="it")
-    tts.save(path)
+def audio_benchmark(samples):
+    for i in range(1,samples+1):
+        path = "./benchmark/audio/"
+        print("recording sample ", i)
+        record_audio(path+"audio_sample_"+str(i)+".wav")
+        print("transcribing sample ", i)
+        response = audio_groq_api(api_key = groq_api_key, model_name = 'whisper-large-v3', audio_path = path+"audio_sample_"+str(i)+".wav")
+        with open(path+"transcription_"+str(i)+".txt", "w") as text_file:
+            text_file.write(response)
+        print("synthesizing sample ", i)
+        tts = gTTS(response, lang="it")
+        tts.save(path+"tts_"+str(i)+".mp3")
     
     
 if __name__ == "__main__":
     import threading
     import queue
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Benchmarking script for attention and audio models.")
+    parser.add_argument('-audio_samples', type=int, default=100, help='Number of audio samples to record and transcribe.')
+    parser.add_argument('-run_audio', action='store_true', help='Flag to run audio benchmark.')
+    parser.add_argument('-run_attention', action='store_true', help='Flag to run attention benchmark.')
+    args = parser.parse_args()
     
     with open("llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
-        
-    stop_event = threading.Event()
-    # Create a queue for the results of the thread execution
-    q = queue.Queue()
-    # Create the face thread
-    thread_face = threading.Thread(target=attention_benchmark, args=(q,stop_event))
     
-    thread_face.start()
+    if args.run_audio:
+        os.makedirs("./benchmark/audio/", exist_ok=True)
+        audio_benchmark(args.audio_samples)
+        
+    if args.run_attention:
+        stop_event = threading.Event()
+        # Create a queue for the results of the thread execution
+        q = queue.Queue()
+        # Create the face thread
+        thread_face = threading.Thread(target=attention_benchmark, args=(q,stop_event))
+        
+        thread_face.start()
