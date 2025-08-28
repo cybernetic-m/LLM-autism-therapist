@@ -176,8 +176,8 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Benchmarking script for attention and audio models.")
     parser.add_argument('-audio_samples', type=int, default=100, help='Number of audio samples to record and transcribe.')
-    parser.add_argument('-run_audio', action='store_true', help='Flag to run audio benchmark.')
-    parser.add_argument('-run_attention', action='store_true', help='Flag to run attention benchmark.')
+    parser.add_argument('-audio', action='store_true', help='Flag to run audio benchmark.')
+    parser.add_argument('-attention', action='store_true', help='Flag to run attention benchmark.')
     args = parser.parse_args()
     
     with open("llm/api_key.txt", "r") as file:
