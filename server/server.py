@@ -87,8 +87,8 @@ def get_audio_response(robot_text, chat_id):
     tts = gTTS(robot_text, lang="it")
     tts.save(file_path)
 
-    #audio = AudioSegment.from_file(file_path)
-    duration_seconds = 0 # round(len(audio) / 1000, 2)
+    audio = AudioSegment.from_file(file_path)
+    duration_seconds =  round(len(audio) / 1000, 2)
     print(f"Audio duration: {duration_seconds} seconds")
 
     # salva nella sessione
