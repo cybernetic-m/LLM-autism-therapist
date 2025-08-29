@@ -13,7 +13,7 @@ system_prompts:
     -You: ...
     ...
 
-    When you answer you must talk directly to the therapist, do not put markdowns, quotes or whatever, just your response.
+    When you answer you must talk directly to the therapist, do not put markdowns, quotes or whatever, just your response in italian.
     At the end of your response write [SCORE]: and a float number between 0 and 1 that represents how much you are engaged in the conversation, if less than 0.5 you are not engaged, make it accordingly to your personality.
 
   gesture_llm: >
