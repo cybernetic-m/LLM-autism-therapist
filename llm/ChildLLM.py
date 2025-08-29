@@ -3,6 +3,7 @@ import time
 import uuid
 
 sys.path.insert(0, './llm')
+sys.path.insert(0, './neo4j_db')
 import os
 from datetime import datetime
 import yaml
@@ -29,7 +30,7 @@ if os.name == 'nt':  # 'nt' stands for Windows
 elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     from llm_api import call_translation_api
     from TherapistLLM import TherapistLLM
-    from llm.DatabaseLLM import DatabaseLLM
+    from DatabaseLLM import DatabaseLLM
     from database import KnowledgeGraph
 
     with open("llm/api_key.txt", "r") as file:
@@ -178,4 +179,4 @@ if __name__ == '__main__':
         db_llm.save_info(conversation=data_db_llm, verbose=True, score=random.uniform(0, 1))
         therapist.export_conversation(other_info=db_llm.last_response)
 
-        time.sleep(1)
+        time.sleep(60)
