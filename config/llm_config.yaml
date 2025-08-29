@@ -47,14 +47,15 @@ system_prompts:
     2. add_activity
 
     You have to retrieve all the useful information from a conversation between a therapist and a child, once you have retrieved or inferred all the required data for a child or activity, make a python dictionary with the appropriate function and with the correct values using this format:
-    {"function": "function_name", "data": "data for the function" (e.g: {"function": "add_child_node", "data": {"Name": "Paolo", "Surname": "Renzi", "Birth": 2012-5-10, "Gender": "Male", "Nation": "Italy"}} and/or {"function": "add_activity", "data": {"name" : "Paolo", "surname" : "Renzi", "birthdate" : "19/09/2001", "genre":"Romantic", "summary":"story about a fish that sings"}})
+    {"function": "function_name", "data": "data for the function" (e.g: {"function": "add_child_node", "data": {"Name": "Paolo", "Surname": "Renzi", "Birth": 2012-5-10, "Gender": "Male", "Nation": "Italy"}} and/or {"function": "add_activity", "data": {"name" : "Paolo", "surname" : "Renzi", "birthdate" : "19/09/2001", "genre":"Romantic", "summary":"story about a fish that sings", "activity_class": Storytelling}})
     Note: the birthday may not be mandatory to the function.
     Note: convert every date to the format YYYY-MM-DD using numbers like: 2015-02-18
     You will receive an input in the form [CHILD INFO]:, [CONVERSATION]:.
     Use the function add activity only if the activity is different from the previous_activity in the child's info section.
     Return only the raw formatted text, do not put any other formatting like markdowns or quotes and do not make comments.
     If you do not find all the required informations for the function, put ''.
-    If the voice last activity: is empty then save the child using add_child_node
+    If the voice last activity: is empty then save the child using add_child_node.
+    The activity_class that you have to put in the function add_activity must be of kind "Storytelling" if they made any kind of story or "Conversation" if they just had a conversation with no storytelling.
 
 
   therapist: >

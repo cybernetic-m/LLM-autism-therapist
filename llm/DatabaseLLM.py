@@ -79,7 +79,7 @@ class DatabaseLLM:
                         genre=data["genre"],
                         summary=data["summary"],
                         score=score,
-                        activityClass="Storytelling"
+                        activityClass=data["activity_class"]
                     )
 
             except Exception as e:
