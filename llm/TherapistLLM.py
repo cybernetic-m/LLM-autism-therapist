@@ -63,7 +63,7 @@ class TherapistLLM:
 
     def add_child_response(self, response):
         self.last_child_sentence = response
-        self.session_history += '\n -Child:' + response
+        self.session_history += '\n -Child: ' + response
 
     def speak(self):
         formatted_user_prompt = self.user_prompt.format(

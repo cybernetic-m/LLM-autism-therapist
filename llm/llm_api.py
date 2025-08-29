@@ -66,8 +66,8 @@ def call_translation_api(api_key, model_name, system_prompt_template, user_promp
             response = requests.post(url, headers=headers, json=data)  # send the request to the Groq API
             # Check for rate limiting (HTTP 429), wait 5 seconds and retry
             if response.status_code in [429, 500]:
-                # print(f"Received {response.status_code}. Retrying in 5s...")
-                time.sleep(5)
+                print(f"Received {response.status_code}. Retrying in 5s...")
+                time.sleep(30)
                 continue  # Retry after wait
 
             response.raise_for_status()  # Raise an exception for other HTTP errors like 400 or 500 (if one occurred)
