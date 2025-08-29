@@ -35,6 +35,7 @@ class DatabaseLLM:
         self.system_prompt = system_prompt_db
         self.kg = KnowledgeGraph()
         self.model_name = model_name
+        self.last_response = ''
 
     def save_info(self, conversation = '', verbose = False, score = 0):
 
@@ -43,6 +44,8 @@ class DatabaseLLM:
                                             system_prompt_template=self.system_prompt,
                                             user_prompt_template=conversation,
                                             temperature=0.0)
+
+        self.last_response = llm_response
         if verbose:
             print(llm_response)
 

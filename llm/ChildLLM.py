@@ -169,12 +169,13 @@ if __name__ == '__main__':
             child_response = child_llm.respond(data, therapist.session_history)
             therapist.add_child_response(child_response)  # + " [SCORE]: " + get_score(score_start, increment*i))
 
-        therapist.export_conversation()
+
         db_llm = DatabaseLLM(api_key=groq_api_key, model_name='gemma2-9b-it')
         data_db_llm = '[CHILD INFO]:\n' + "name: " + data["child_name"] + "\nsurname: " + data[
             "child_surname"] + "\nbirth: " + data["child_birth"] + "\n" + "[CONVERSATION]:" + therapist.session_history
 
         print(data_db_llm)
         db_llm.save_info(conversation=data_db_llm, verbose=True, score=random.uniform(0, 1))
+        therapist.export_conversation(other_info=db_llm.last_response)
 
         time.sleep(1)

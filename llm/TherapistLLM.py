@@ -89,7 +89,7 @@ class TherapistLLM:
         self.last_gesture = self.gesture_llm.get_gesture(self.last_child_sentence, llm_response) # get the gesture from the response
         return llm_response
 
-    def export_conversation(self, path='conversations'):
+    def export_conversation(self, path='conversations', other_info = None):
         """
         Esporta la conversazione in un file di testo con un ID univoco.
         Compatibile sia con Windows che con Linux/Mac.
@@ -110,6 +110,9 @@ class TherapistLLM:
         with open(file_path_conversation, "w", encoding="utf-8") as file_conv:
             file_conv.write("Therapy Session Conversation\n\n")
             file_conv.write(self.session_history.strip())
+            if other_info:
+                file_conv.write('\n\n' + other_info)
+
 
         return file_path_conversation
 
