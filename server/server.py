@@ -1,5 +1,3 @@
-
-
 import sys
 import os
 import threading
@@ -8,6 +6,8 @@ import uuid
 import glob
 from pydub import AudioSegment
 from flask import Flask, request, render_template, jsonify, redirect, url_for, session
+import argparse
+
 
 sys.path.insert(0, './audio')
 sys.path.insert(0, './neo4j_db')
@@ -40,6 +40,19 @@ elif os.name == 'posix':  # 'posix' stands for Unix/Linux/MacOS
     with open("./llm/api_key.txt", "r") as file:
         groq_api_key = file.read()
 
+# Argument Terminal Parser, you need to execute the code using "python server.py -experiment {full/minimal}"
+# Minimal: only text chat (no audio, no gestures)
+# Full: audio chat with robot that can talk and gestures
+parser = argparse.ArgumentParser(description="Robot IP and Port")
+parser.add_argument("-experiment", type=str, default='full', help="'minimal' or 'full' experiment")
+
+# Parse the arguments
+args = parser.parse_args()
+experiment_type = args.experiment.lower()
+if experiment_type == 'minimal':
+    full = False
+else:
+    full = True
 
 # _____ VARIABLES AND UTILS _____
 therapist_model = 'llama-3.3-70b-versatile'
@@ -217,6 +230,10 @@ def chat_start():
     message, audio_path, duration = get_therapist_response(chat_id)
 
     thread_face.start()
+
+    if not full:
+        audio_path = None
+        
     return jsonify({"robot": message, "robot_audio": f"{audio_path}", "chat_id": chat_id})
 
 
@@ -229,6 +246,9 @@ def chat_message():
     response = data.get("message") # get the message sent
 
     robot_response, audio_path, duration = get_therapist_response(chat_id, response)
+
+    if not full:
+        audio_path = None
 
     return jsonify({"child": response, "robot": robot_response, "robot_audio": f"{audio_path}"})
 
@@ -318,7 +338,10 @@ def send_data():
         if not therapist:
             raise ValueError(f"No active chat session found for chat_id: {chat_id}")
         sentence = therapist.last_response
-        gesture = therapist.last_gesture
+        if full:
+            gesture = therapist.last_gesture
+        else:
+            gesture = "nothing"
         t = active_chats[chat_id].last_response_audio_length
         print(f"Sending to robot: sentence={sentence}, gesture={gesture}, t={t}")
         active_chats['llm_updated'] = False
