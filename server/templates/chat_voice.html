@@ -194,7 +194,7 @@
   let currentAudio = null;
   let waitingForRobot = false;
 
-  // Enter key = invio messaggio
+  // Enter key = send message
   document.getElementById("childInput").addEventListener("keypress", function(e) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -220,7 +220,7 @@
   }
 
   
-  // Primo messaggio del robot
+  // first robot message
   window.onload = async function() {
     showTyping()
     const response = await fetch("/chat/start");
@@ -231,7 +231,7 @@
     hideTyping()
   }
 
-  // Invia testo
+  //  send message
   document.getElementById("sendBtn").addEventListener("click", async () => {
     if (waitingForRobot) return;
 
@@ -255,7 +255,7 @@
     waitingForRobot = false;
   });
 
-  // Ferma audio robot se scrivo
+  // stop audio on input
   document.getElementById("childInput").addEventListener("input", () => {
     if (currentAudio) {
       currentAudio.pause();
@@ -263,7 +263,7 @@
     }
   });
 
-  // Registrazione vocale
+  // record audio
   document.getElementById("recordBtn").addEventListener("click", async () => {
     if (currentAudio) {
       currentAudio.pause();
@@ -271,7 +271,7 @@
     }
 
     if (!recording) {
-      // Inizio registrazione
+      // start rcording
         recording = true;
         document.getElementById("recordBtn").innerHTML = '<i class="fas fa-stop"></i>';
 
@@ -345,14 +345,14 @@
       };
 
     } else {
-      // stop manuale
+      // stop 
       recording = false;
       document.getElementById("recordBtn").innerHTML = '<i class="fas fa-microphone"></i>';
       mediaRecorder.stop();
     }
   });
 
-  // Esci
+  // exit chat
   document.getElementById("exitBtn").addEventListener("click", async () => {
     const response = await fetch("/chat/exit", { method: "POST" });
     const data = await response.json();
@@ -362,13 +362,13 @@
 
 
   function showTyping() {
-  const typing = document.createElement("div");
-  typing.classList.add("message", "typing");
-  typing.setAttribute("id", "typingIndicator");
-  typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-  chatBox.appendChild(typing);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
+    const typing = document.createElement("div");
+    typing.classList.add("message", "typing");
+    typing.setAttribute("id", "typingIndicator");
+    typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    chatBox.appendChild(typing);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
 function hideTyping() {
   const typing = document.getElementById("typingIndicator");
@@ -376,19 +376,17 @@ function hideTyping() {
 }
 
 document.getElementById("enableAudioBtn").addEventListener("click", () => {
-  // sblocca l'audio
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === "suspended") {
     audioCtx.resume();
   }
 
-  // chiudi popup
   document.getElementById("audioPopup").style.display = "none";
 
 });
 
 document.getElementById("goBack").addEventListener("click", () => {
-  window.location.href = "/"; // porta alla home
+  window.location.href = "/"; 
 });
 
 

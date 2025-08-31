@@ -88,7 +88,6 @@
         <input type="text" name="name" placeholder="Nome" required>
         <input type="text" name="surname" placeholder="Cognome" required>
 
-        <!-- campi opzionali -->
          <select name="sex" class="optional">
           <option value="" disabled selected>Sesso</option>
           <option value="Uomo">Uomo</option>
@@ -109,7 +108,7 @@
 async function checkUser() {
     const name = document.querySelector('input[name="name"]').value.trim();
     const surname = document.querySelector('input[name="surname"]').value.trim();
-    const sexField = document.querySelector('[name="sex"]');   // funziona sia input che select
+    const sexField = document.querySelector('[name="sex"]');   
     const birthField = document.querySelector('input[name="birth"]');
 
     if (name && surname) {
@@ -128,9 +127,6 @@ async function checkUser() {
     }
 }
 
-
-
-// Controlla quando si cambia il nome o cognome
 document.querySelector('input[name="name"]').addEventListener('input', checkUser);
 document.querySelector('input[name="surname"]').addEventListener('input', checkUser);
 </script>
