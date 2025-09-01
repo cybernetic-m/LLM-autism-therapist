@@ -178,10 +178,10 @@ if __name__ == "__main__":
     import queue
     import argparse
     
-    parser = argparse.ArgumentParser(description="Benchmarking script for attention and audio models.")
+    parser = argparse.ArgumentParser(description="Benchmarking script for engagement and audio models.")
     parser.add_argument('-audio_samples', type=int, default=100, help='Number of audio samples to record and transcribe.')
     parser.add_argument('-audio', action='store_true', help='Flag to run audio benchmark.')
-    parser.add_argument('-attention', action='store_true', help='Flag to run attention benchmark.')
+    parser.add_argument('-engagement', action='store_true', help='Flag to run engagement benchmark.')
     args = parser.parse_args()
     
     with open("llm/api_key.txt", "r") as file:
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         os.makedirs("./evaluation/rbc_evaluation/audio/", exist_ok=True)
         audio_benchmark(args.audio_samples)
         
-    if args.attention:
+    if args.engagement:
         stop_event = threading.Event()
         # Create a queue for the results of the thread execution
         q = queue.Queue()
