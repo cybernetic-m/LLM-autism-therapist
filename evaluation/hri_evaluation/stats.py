@@ -1,4 +1,5 @@
 import pandas as pd
+from scipy.stats import ttest_rel
 
 
 def select_data(file_path):
@@ -66,16 +67,86 @@ def select_data(file_path):
 
     return perc_minimal, sati_minimal, eng_minimal, perc_full, sati_full, eng_full
 
+def questionnaire_stats(data1, data2):
+    '''
+    This function computes importants Questionnaire stastistics such as means, standard deviations and p-value 
+    using a paired t-test between two sets of data. Firstly it computes the sum of each row (user) points for both dataframes.
+    In particular in a set of data = [x1, x2, ..., xn] each xi is the sum of the scores of a user (row) for all the questions (columns), it
+    return the mean and standard deviation of the sums and the p-value of the paired t-test between the two.
+
+    Args:
+        data1 (pd.DataFrame): The first set of data: a DataFrame where each row is a user and each column is a question score 
+        data2 (pd.DataFrame): The second set of data: a DataFrame where each row is a user and each column is a question score 
+    Returns:
+        mean1 (float): The mean of the sums of first set of data.
+        mean2 (float): The mean of the second set of data.
+        std1 (float): The standard deviation of the first set of data.
+        std2 (float): The standard deviation of the second set of data.
+        p_value (float): The computed p-value from the paired t-test.
+    '''
+
+    #print("Data1:\n", data1)
+
+    # Firstly we compute the sum of each row (user) points for both dataframes
+    # :1 means that we want to select all the rows and all the columns except the first one (ID column)
+    sum_df1 = data1.iloc[:, 1:].sum(axis=1)  
+    sum_df2 = data2.iloc[:, 1:].sum(axis=1)  
+
+    # Then we compute the mean of the sums
+    mean1 = sum_df1.iloc[:].sum()/ (sum_df1.shape[0])  # Divide by the number of users (rows)
+    mean2 = sum_df2.iloc[:].sum()/ (sum_df2.shape[0])
+
+    # Compute the standard deviation of the sums
+    std1 = sum_df1.std()
+    std2 = sum_df2.std()
+
+    # Perform a paired t-test (to perform that we pass the two arrays of sums)
+    t_stat, p_value = ttest_rel(sum_df1, sum_df2)  
+
+    return mean1, mean2, std1, std2, p_value
+
 
 if __name__ == "__main__":
     file_path = 'evaluation/hri_evaluation/hri-questionnaire.csv'
     perc_minimal, sati_minimal, eng_minimal, perc_full, sati_full, eng_full = select_data(file_path)
+
+    #print("User Perception Data Minimal:\n", perc_minimal)
+    #print("\nUser Satisfaction Data Minimal:\n", sati_minimal)
+    #print("\nUser Engagement Data Minimal:\n", eng_minimal)
+
+    #print("\nUser Perception Data Full:\n", perc_full)
+    #print("\nUser Satisfaction Data Full:\n", sati_full)
+    #print("\nUser Engagement Data Full:\n", eng_full)
     
-    # Print the results
-    print("User Perception Full:")
-    print(perc_full)            
-    print("\nUser Perception Minimal:")
-    print(perc_minimal)
+    # Initialize a dict to store the p-values
+    stats_dict = {'User Perception': {'Mean Minimal': [], 'Mean Full': [], 'Std Minimal': [], 'Std Full': [], 'P Value': []}, 'User Satisfaction': {'Mean Minimal': [], 'Mean Full': [], 'Std Minimal': [], 'Std Full': [], 'P Value': []}, 'User Engagement': {'Mean Minimal': [], 'Mean Full': [], 'Std Minimal': [], 'Std Full': [], 'P Value': []}}
+
+    # Perform paired t-tests
+    for name, data_minimal, data_full in zip(
+        ["User Perception", "User Satisfaction", "User Engagement"],
+        [perc_minimal, sati_minimal, eng_minimal],
+        [perc_full, sati_full, eng_full]
+    ):
+        # Compute statistics
+        mean1, mean2, std1, std2, p = questionnaire_stats(data_minimal, data_full)
+
+        # Append the stats to the dictionary
+        stats_dict[name]['Mean Minimal'].append(mean1)
+        stats_dict[name]['Mean Full'].append(mean2)
+        stats_dict[name]['Std Minimal'].append(std1)
+        stats_dict[name]['Std Full'].append(std2)
+        stats_dict[name]['P Value'].append(p)
+
+        # Print the results
+        print(f"\n{name} Statistics:")
+        print(f"Mean Minimal: {mean1:.2f}, Mean Full: {mean2:.2f}")
+        print(f"Std Minimal: {std1:.2f}, Std Full: {std2:.2f}")
+        print(f"P-value: {p:.4f}")
+
+    # Save the p-values in a CSV file
+    stats_df = pd.DataFrame(stats_dict)
+    stats_df.to_csv('evaluation/hri_evaluation/stats.csv', index=False)
+    print("\nStats saved to 'evaluation/hri_evaluation/stats.csv'")
   
     
     
