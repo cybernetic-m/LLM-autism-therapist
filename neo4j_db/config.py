@@ -25,4 +25,4 @@ RELATIONSHIPS = [
     {"type": "SUBCLASS_OF", "from": "ActivityDetail", "to": "Activity"}
 ]
 
-ACTIVITIES = ["Storytelling", "Music"]
+ACTIVITIES = ["Storytelling", "Music", "Conversation"]
