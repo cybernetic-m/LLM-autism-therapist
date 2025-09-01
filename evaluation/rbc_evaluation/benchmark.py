@@ -30,7 +30,7 @@ def attention_benchmark(q, stop_event):
     num_frames_emotion = 20
     last_save_time = time.time()
 
-    os.makedirs("./benchmark/frames", exist_ok=True)
+    os.makedirs("./evaluation/rbc_evaluation/frames", exist_ok=True)
     
     # Open the default camera (usually the first camera)
     camera = cv2.VideoCapture(0)
@@ -140,7 +140,7 @@ def attention_benchmark(q, stop_event):
                         cv2.imshow(window_name, frame)
                         current_time = time.time()
                         if current_time - last_save_time  >= 1.0:
-                            filename = f"./benchmark/frames/frame_{counter_frames}.jpg"
+                            filename = f"./evaluation/rbc_evaluation/frames/frame_{counter_frames}.jpg"
                             cv2.imwrite(filename, frame)
                             last_save_time = current_time
                             counter_frames_ += 1
@@ -161,7 +161,7 @@ def attention_benchmark(q, stop_event):
 
 def audio_benchmark(samples):
     for i in range(1,samples+1):
-        path = "./benchmark/audio/"
+        path = "./evaluation/rbc_evaluation/audio/"
         print("recording sample ", i)
         record_audio(path+"audio_sample_"+str(i)+".wav")
         print("transcribing sample ", i)
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         groq_api_key = file.read()
     
     if args.audio:
-        os.makedirs("./benchmark/audio/", exist_ok=True)
+        os.makedirs("./evaluation/rbc_evaluation/audio/", exist_ok=True)
         audio_benchmark(args.audio_samples)
         
     if args.attention:
