@@ -84,9 +84,10 @@ class TherapistLLM:
                                             user_prompt_template=formatted_user_prompt,
                                             temperature=1)
 
-        self.session_history += '\n -Therapist: ' + llm_response
+
         self.last_response = llm_response
         self.last_gesture = self.gesture_llm.get_gesture(self.last_child_sentence, llm_response) # get the gesture from the response
+        self.session_history += '\n -Therapist: ' + llm_response + ' [GESTURE]: ' + self.last_gesture
         return llm_response
 
     def export_conversation(self, path='conversations', other_info = None):

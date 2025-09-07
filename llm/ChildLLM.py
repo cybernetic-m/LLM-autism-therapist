@@ -100,7 +100,7 @@ def get_random_child():
     sex = random.choice(["M", "F"])
     personalities = [
         # Positive
-        "curious", "playful", "creative", "brave", "kind", "energetic"
+        #"curious", "playful", "creative", "brave", "kind", "energetic"
         # Negative
         "stubborn", "lazy", "selfish", "impatient", "shy", "rebellious", "distracted"
     ]
@@ -125,10 +125,10 @@ def make_childs(num):
 
 if __name__ == '__main__':
 
-    childs = make_childs(50) # make 50 childs with name, surname, birthdate, sex and one personality trait
+    childs = make_childs(5) # make 50 childs with name, surname, birthdate, sex and one personality trait
     conversation_length = 8
 
-    for conv in range(2):  # make 100 conversations
+    for conv in range(5):  # make 100 conversations
         print(f"\n     --- CONVERSATION {conv} STARTING ---\n")
         child_llm = ChildLLM(model_name='gemma2-9b-it')
         name, surname, sex, birth, personality = random.choice(childs) # use a random child
