@@ -1,5 +1,6 @@
+create a conda env with python 3.10 and pip install -r requirements.txt
+
 To install for the camera:
-pip install opencv-python
 sudo apt install qtwayland5
 
 To install for the audio:
