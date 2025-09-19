@@ -9,7 +9,7 @@ We have developed this project for the Human Robot Interaction and Robot Benchma
 The following tools and frameworks were used in this project:
 
 - 🐳 **[Docker](https://www.docker.com/)** – containerization for deployment
-- G **[Groq](https://groq.com/)** – server for fast AI inference (to use LLMs)
+- G  **[Groq](https://groq.com/)** – server for fast AI inference (to use LLMs)
 - 🐧 **[Ubuntu](https://ubuntu.com/)** – development environment  
 - 🤖 **[Choregraphe (SoftBank Robotics)](https://aldebaran.com/en/support/kb/nao6/downloads/nao6-software-downloads/)** – robot programming environment 
 - 📡 **[NAOqi SDK](http://doc.aldebaran.com/2-5/index_dev_guide.html)** – communication with Pepper  
