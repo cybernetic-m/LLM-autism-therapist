@@ -8,12 +8,13 @@ We have developed this project for the Human Robot Interaction and Robot Benchma
 
 The following tools and frameworks were used in this project:
 
-- 🐳 **Docker** – containerization for deployment  
-- 🐧 **Ubuntu** – development environment  
-- 🤖 **Choregraphe (SoftBank Robotics)** – robot programming environment  
-- 📡 **NAOqi SDK** – communication with Pepper  
-- 🐍 **Python** – backend and logic  
+- 🐳 **[Docker](https://www.docker.com/)** – containerization for deployment  
+- 🐧 **[Ubuntu](https://ubuntu.com/)** – development environment  
+- 🤖 **[Choregraphe (SoftBank Robotics)](https://aldebaran.com/en/support/kb/nao6/downloads/nao6-software-downloads/)** – robot programming environment 
+- 📡 **[NAOqi SDK](http://doc.aldebaran.com/2-5/index_dev_guide.html)** – communication with Pepper  
+- 💻 **[Python](https://www.python.org/)** – backend and logic  
 - 🎨 **HTML / CSS** – user interface  
+- 🐍 **[Conda](https://docs.conda.io/en/latest/)** – package and environment management  
 
 
 
