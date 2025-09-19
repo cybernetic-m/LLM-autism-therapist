@@ -9,3 +9,4 @@ tf-keras
 gtts
 pydub
 flask
+pyyaml
