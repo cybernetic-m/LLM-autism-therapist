@@ -32,13 +32,13 @@ git clone "https://github.com/cybernetic-m/LLM-autistic-therapist.git"
 ## 👥 Authors
 
 - 👨‍💻 **Massimo Romano** (ID: 2043836)  
-  - 🐙 GitHub: [cybernetic-m](https://github.com/cybernetic-m)  
+  - 😺 GitHub: [cybernetic-m](https://github.com/cybernetic-m)  
   - 📧 Email: romano.2043836@studenti.uniroma1.it  
 
 - 👨‍💻 **Paolo Renzi** (ID: 1887793)  
-  - 🐙 GitHub: [RenziPaolo](https://github.com/RenziPaolo)  
+  - 😺 GitHub: [RenziPaolo](https://github.com/RenziPaolo)  
   - 📧 Email: renzi.1887793@studenti.uniroma1.it  
 
 - 👨‍💻 **Antonio Lissa Lattanzio** (ID: 2154208)  
-  - 🐙 GitHub: [AntonLissa](https://github.com/AntonLissa)  
+  - 😺 GitHub: [AntonLissa](https://github.com/AntonLissa)  
   - 📧 Email: lissalattanzio.2154208@studenti.uniroma1.it  
