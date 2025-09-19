@@ -19,7 +19,7 @@ The following tools and frameworks were used in this project:
 
 To read all the details of the project, you can read the "**report.pdf**" file. 
 
-To install and use the project, refer to our repository [Wiki](https://github.com/cybernetic-m/LLM-autistic-therapist/wiki).
+To install and use the project, refer to our repository 📚 [Wiki](https://github.com/cybernetic-m/LLM-autistic-therapist/wiki).
 
 ## Clone the repository
 
@@ -29,16 +29,16 @@ git clone "https://github.com/cybernetic-m/LLM-autistic-therapist.git"
  ```
 
 
-## Authors
+## 👥 Authors
 
-Massimo Romano (2043836) (https://github.com/cybernetic-m) 
+- 👨‍💻 **Massimo Romano** (ID: 2043836)  
+  - 🐙 GitHub: [cybernetic-m](https://github.com/cybernetic-m)  
+  - 📧 Email: romano.2043836@studenti.uniroma1.it  
 
-email: romano.2043836@studenti.uniroma1.it
+- 👨‍💻 **Paolo Renzi** (ID: 1887793)  
+  - 🐙 GitHub: [RenziPaolo](https://github.com/RenziPaolo)  
+  - 📧 Email: renzi.1887793@studenti.uniroma1.it  
 
-Paolo Renzi (1887793) (https://github.com/RenziPaolo)
-
-email: renzi.1887793@studenti.uniroma1.it 
-
-Antonio Lissa Lattanzio (2154208) (https://github.com/AntonLissa)
-
-email: lissalattanzio.2154208@studenti.uniroma1.it 
+- 👨‍💻 **Antonio Lissa Lattanzio** (ID: 2154208)  
+  - 🐙 GitHub: [AntonLissa](https://github.com/AntonLissa)  
+  - 📧 Email: lissalattanzio.2154208@studenti.uniroma1.it  
