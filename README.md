@@ -14,8 +14,6 @@ To install and use the project, refer to our repository [Wiki](https://github.co
 ## Clone the repository
 
 
-1. 
-
  ```sh 
 git clone "https://github.com/cybernetic-m/LLM-autistic-therapist.git"
  ```
