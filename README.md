@@ -6,7 +6,7 @@ We have developed this project for the Human Robot Interaction and Robot Benchma
 
 ## 📹 Youtube Video Simulation
 
-You can see a simulation with Adam in this 🎥[Youtube Video](https://www.youtube.com/watch?v=DmJrDHUyLnA&t=69s)
+You can see a simulation with Adam in this 🎥 [**Youtube Video**](https://www.youtube.com/watch?v=DmJrDHUyLnA&t=69s)
 
 ## 🛠️ Requirements
 
@@ -21,11 +21,9 @@ The following tools and frameworks were used in this project:
 - 🎨 **HTML / CSS** – user interface  
 - 🐍 **[Conda](https://docs.conda.io/en/latest/)** – package and environment management  
 
+To read all the details of the project, you can read our 📕 [**Report**](https://github.com/cybernetic-m/LLM-autism-therapist/blob/main/report.pdf). 
 
-
-To read all the details of the project, you can read the "**report.pdf**" file. 
-
-To install and use the project, refer to our repository 📚 [Wiki](https://github.com/cybernetic-m/LLM-autistic-therapist/wiki).
+To install and use the project, refer to our repository 📚 [**Wiki**](https://github.com/cybernetic-m/LLM-autistic-therapist/wiki).
 
 
 ## 👥 Authors
