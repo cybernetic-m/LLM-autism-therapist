@@ -20,9 +20,6 @@ git clone "https://github.com/cybernetic-m/LLM-autistic-therapist.git"
  ```
 
 
-## Usage
-
-
 ## Authors
 
 Massimo Romano (2043836) (https://github.com/cybernetic-m) 
