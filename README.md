@@ -10,7 +10,7 @@ The following tools and frameworks were used in this project:
 
 - 🐳 **[Docker](https://www.docker.com/)** – containerization for deployment  
 - 🐧 **[Ubuntu](https://ubuntu.com/)** – development environment  
-- 🤖 **[Choregraphe (SoftBank Robotics)]([https://www.softbankrobotics.com/emea/en/support/software](https://aldebaran.com/en/support/kb/nao6/downloads/nao6-software-downloads/))** – robot programming environment 
+- 🤖 **[Choregraphe (SoftBank Robotics)](https://aldebaran.com/en/support/kb/nao6/downloads/nao6-software-downloads/)** – robot programming environment 
 - 📡 **[NAOqi SDK](http://doc.aldebaran.com/2-5/index_dev_guide.html)** – communication with Pepper  
 - 💻 **[Python](https://www.python.org/)** – backend and logic  
 - 🎨 **HTML / CSS** – user interface  
