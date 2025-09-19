@@ -4,6 +4,10 @@ We have developed this project for the Human Robot Interaction and Robot Benchma
 
 <img src="gif/hri_gif.gif" alt="Description" width="700" height = "700" />
 
+## 📹 Youtube Video Simulation
+
+You can see a simulation with Adam in this 🎥[Youtube Video](https://www.youtube.com/watch?v=DmJrDHUyLnA&t=69s)
+
 ## 🛠️ Requirements
 
 The following tools and frameworks were used in this project:
