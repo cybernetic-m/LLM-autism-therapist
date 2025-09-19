@@ -9,7 +9,7 @@ QUA
 
 
 To read all the details of the project, you can read the "**report.pdf**" file. 
-To install and use the project, refer to our repository [Wiki]()
+To install and use the project, refer to our repository [Wiki](https://github.com/cybernetic-m/LLM-autistic-therapist/wiki).
 
 ## Clone the repository
 
