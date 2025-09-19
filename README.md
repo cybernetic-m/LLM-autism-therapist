@@ -2,7 +2,7 @@
 Adam is a Pepper robot therapist developed to assist in therapy session with autistic childer: in particular Adam is able to engage the child in conversation such as storytelling activities, and remember the child past sessions and information. Adam is able also to track the engagement of the child using both emotion and gaze, to recover the conversation if it is not liked by the child.
 We have developed this project for the Human Robot Interaction and Robot Benchmarking and Competition course at Sapienza University of Rome.
 
-<img src="gif/hri_gif.gif" alt="Description" width="500" height = "500" />
+<img src="gif/hri_gif.gif" alt="Description" width="800" height = "800" />
 
 ## 🛠️ Requirements
 
