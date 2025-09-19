@@ -4,9 +4,14 @@ We have developed this project for the Human Robot Interaction and Robot Benchma
 
 <img src="gif/hri_gif.gif" alt="Description" width="500" height = "500" />
 
-To read all the details of the 
 
-## 🐋 Docker Installation 
+QUA
+
+
+To read all the details of the project, you can read the "**report.pdf**" file. 
+To install and use the project, refer to our repository [Wiki]()
+
+## Clone the repository
 
 
 1. 
