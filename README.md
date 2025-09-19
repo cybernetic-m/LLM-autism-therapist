@@ -4,8 +4,17 @@ We have developed this project for the Human Robot Interaction and Robot Benchma
 
 <img src="gif/hri_gif.gif" alt="Description" width="500" height = "500" />
 
+## 🛠️ Requirements
 
-QUA
+The following tools and frameworks were used in this project:
+
+- **Docker**  - containerization for deployment
+- **Ubuntu**  – development environment
+- **Choregraphe** (SoftBank Robotics)  – robot programming environment
+- **NAOqi** SDK  – communication with Pepper
+- **Python**  – backend and logic
+- **HTML / CSS** – User interface
+
 
 
 To read all the details of the project, you can read the "**report.pdf**" file. 
