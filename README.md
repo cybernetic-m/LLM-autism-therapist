@@ -20,20 +20,15 @@ To read all the details of the
 
 
 ## Authors
+
 Massimo Romano (2043836) (https://github.com/cybernetic-m) 
+
 email: romano.2043836@studenti.uniroma1.it
 
 Paolo Renzi (1887793) (https://github.com/RenziPaolo)
+
 email: renzi.1887793@studenti.uniroma1.it 
 
 Antonio Lissa Lattanzio (2154208) (https://github.com/AntonLissa)
+
 email: lissalattanzio.2154208@studenti.uniroma1.it 
-
-## References
-
-[1] [NOME_PAPER1](link1)
-
-[2] [NOME_PAPER2](link2)
-
-
-
